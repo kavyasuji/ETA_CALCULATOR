@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AUH Flight ETA & Zulu Time Calculator (24H)</title>
+    <!-- PWA & Mobile Meta -->
+    <meta name="theme-color" content="#0b1120">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AUH ETA">
+    <!-- PWA Manifest & Icons -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b1120;
+            color: #f8fafc;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased p-3 sm:p-6">
+    <div class="max-w-xl w-full mx-auto space-y-4 my-auto">
+        <!-- HEADER: FIXED BASE (AUH) + LIVE 24H CLOCKS -->
+        <header class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                    <i class="ph-fill ph-airplane-takeoff text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-mono font-bold text-sm text-white tracking-wide">AUH ETA CALCULATOR</h1>
+                    <p class="text-[11px] font-mono text-cyan-400">Origin Fixed: AUH (UTC+04:00) • 24H</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-right font-mono">
+                <div class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1">
+                    <div class="text-[9px] text-slate-400">AUH LT</div>
+                    <div id="live-auh-clock" class="text-xs font-bold text-cyan-300">00:00</div>
+                </div>
+                <div class="bg-slate-950 border border-amber-500/30 rounded-lg px-2.5 py-1">
+                    <div class="text-[9px] text-amber-400">UTC (Z)</div>
+                    <div id="live-utc-clock" class="text-xs font-bold text-amber-400">00:00Z</div>
+                </div>
+            </div>
+        </header>
+        <main class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4">
+            <!-- 1. DESTINATION COUNTRY OR AIRPORT CODE -->
+            <div class="space-y-1.5 relative">
+                <div class="flex items-center justify-between">
+                    <label for="dest-input" class="text-xs font-mono uppercase text-slate-300 font-bold">
+                        1. Destination Country / Airport Code
+                    </label>
+                    <span id="dest-tz-pill" class="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
+                        COK • India (UTC+05:30)
+                    </span>
+                </div>
+                <div class="relative">
+                    <input
+                        type="text"
+                        id="dest-input"
+                        value="COK"
+                        autocomplete="off"
+                        placeholder="Type IATA or Country Code (e.g. COK, ALA, ALY, BOM, LHR, IN, UK, KZ, EG)..."
+                        class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-3 font-mono text-base font-bold uppercase text-white placeholder:font-normal placeholder:normal-case placeholder:text-slate-500 focus:outline-none"
+                    >
+                    <!-- Quick Dropdown List -->
+                    <div id="dest-dropdown" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-52 overflow-y-auto z-30 divide-y divide-slate-800"></div>
+                </div>
+            </div>
+            <!-- 2 & 3: AIRBORNE TIME (24H) & EET (FLYING HOURS) SIDE BY SIDE -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <!-- AIRBORNE TIME BOX -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label for="airborne-input" class="text-xs font-mono uppercase text-slate-300 font-bold">
+                            2. Airborne Time (24H)
+                        </label>
+                        <!-- Toggle AUH Local vs UTC -->
+                        <div class="inline-flex rounded-lg bg-slate-900 p-0.5 border border-slate-800 text-[10px] font-mono">
+                            <button type="button" id="ab-mode-local" class="px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-bold">AUH LT</button>
+                            <button type="button" id="ab-mode-utc" class="px-2 py-0.5 rounded-md text-slate-400 hover:text-white">UTC (Z)</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="text"
+                            id="airborne-input"
+                            value="14:30"
+                            maxlength="5"
+                            inputmode="numeric"
+                            placeholder="HH:MM or 1430"
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2.5 text-center font-mono text-2xl font-extrabold text-white focus:outline-none tracking-wider"
+                        >
+                        <button
+                            type="button"
+                            id="ab-now-btn"
+                            class="px-2.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-[11px] font-bold shrink-0 transition"
+                            title="Set Airborne Time to Right Now"
+                        >
+                            NOW
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                        <span class="text-slate-500">Manual Entry</span>
+                        <span id="ab-converted-tag" class="text-amber-400 font-semibold">= 10:30Z (UTC)</span>
+                    </div>
+                </div>
+                <!-- EET (ESTIMATED ELAPSED TIME / FLYING HOURS) BOX -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label for="eet-input" class="text-xs font-mono uppercase text-slate-300 font-bold">
+                            3. EET (Flying Time)
+                        </label>
+                        <span class="text-[10px] font-mono text-emerald-400">HH:MM or 4-Digit</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" data-eet-step="-10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-xs font-bold">-10m</button>
+                        <input
+                            type="text"
+                            id="eet-input"
+                            value="03:55"
+                            maxlength="5"
+                            inputmode="numeric"
+                            placeholder="03:55 or 0355"
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2 py-2.5 text-center font-mono text-2xl font-extrabold text-emerald-400 focus:outline-none tracking-wider"
+                        >
+                        <button type="button" data-eet-step="10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-xs font-bold">+10m</button>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                        <span>Duration Enroute</span>
+                        <span id="eet-total-mins" class="text-emerald-300 font-semibold">3h 55m (235m)</span>
+                    </div>
+                </div>
+            </div>
+            <!-- DUAL OUTPUT CARDS: ARRIVAL LOCAL TIME & ARRIVAL UTC TIME -->
+            <div class="pt-2 border-t border-slate-800 space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- OUTPUT 1: DESTINATION LOCAL ETA (24H) -->
+                    <div class="bg-emerald-950/30 border-2 border-emerald-500/60 rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-mono uppercase font-bold text-emerald-400">ETA DESTINATION (LOCAL)</span>
+                            <span id="out-local-day" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">SAME DAY</span>
+                        </div>
+                        <div class="my-2 flex items-baseline gap-2">
+                            <span id="out-local-time" class="font-mono text-4xl sm:text-5xl font-extrabold text-white tracking-tight">19:55</span>
+                            <span id="out-local-code" class="font-mono text-sm font-bold text-emerald-400">COK</span>
+                        </div>
+                        <div id="out-local-meta" class="text-[11px] font-mono text-slate-300 truncate">
+                            India (UTC+05:30)
+                        </div>
+                    </div>
+                    <!-- OUTPUT 2: ZULU / UTC ETA (24H) -->
+                    <div class="bg-amber-950/25 border-2 border-amber-500/50 rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-mono uppercase font-bold text-amber-400">ETA ZULU (UTC)</span>
+                            <span id="out-utc-day" class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">UTC</span>
+                        </div>
+                        <div class="my-2 flex items-baseline gap-2">
+                            <span id="out-utc-time" class="font-mono text-4xl sm:text-5xl font-extrabold text-amber-400 tracking-tight">14:25Z</span>
+                        </div>
+                        <div id="out-auh-ref" class="text-[11px] font-mono text-cyan-300">
+                            AUH Base Time: 18:25 LT
+                        </div>
+                    </div>
+                </div>
+                <!-- ONE-LINE SUMMARY & COPY BUTTON -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2">
+                    <div id="summary-line" class="font-mono text-xs text-slate-300 truncate">
+                        DEP AUH 14:30 LT (10:30Z) • EET 03:55 • ETA COK 19:55 LT (14:25Z)
+                    </div>
+                    <button
+                        type="button"
+                        id="copy-btn"
+                        class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold shrink-0 flex items-center gap-1 transition active:scale-95"
+                    >
+                        <i class="ph-bold ph-copy"></i>
+                        <span id="copy-btn-label">COPY</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+const AUH_OFFSET = 4.0;
+const DESTINATIONS = [
+{ code: 'COK', countryCode: 'IN', name: 'Kochi (Cochin), India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'TRV', countryCode: 'IN', name: 'Thiruvananthapuram, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'CCJ', countryCode: 'IN', name: 'Kozhikode (Calicut), India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'CNN', countryCode: 'IN', name: 'Kannur, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'BOM', countryCode: 'IN', name: 'Mumbai, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'DEL', countryCode: 'IN', name: 'New Delhi, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'BLR', countryCode: 'IN', name: 'Bengaluru, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'MAA', countryCode: 'IN', name: 'Chennai, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'HYD', countryCode: 'IN', name: 'Hyderabad, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'CCU', countryCode: 'IN', name: 'Kolkata, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'AMD', countryCode: 'IN', name: 'Ahmedabad, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'GOI', countryCode: 'IN', name: 'Goa, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'PNQ', countryCode: 'IN', name: 'Pune, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'LKO', countryCode: 'IN', name: 'Lucknow, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'JAI', countryCode: 'IN', name: 'Jaipur, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'ATQ', countryCode: 'IN', name: 'Amritsar, India', offset: 5.5, dstRule: 'NONE' },
+{ code: 'IN',  countryCode: 'IN', name: 'India (All Stations IST)', offset: 5.5, dstRule: 'NONE' },
+{ code: 'PK',  countryCode: 'PK', name: 'Pakistan (KHI / LHE / ISB)', offset: 5.0, dstRule: 'NONE' },
+{ code: 'KHI', countryCode: 'PK', name: 'Karachi, Pakistan', offset: 5.0, dstRule: 'NONE' },
+{ code: 'LHE', countryCode: 'PK', name: 'Lahore, Pakistan', offset: 5.0, dstRule: 'NONE' },
+{ code: 'ISB', countryCode: 'PK', name: 'Islamabad, Pakistan', offset: 5.0, dstRule: 'NONE' },
+{ code: 'BD',  countryCode: 'BD', name: 'Bangladesh (DAC / CGP)', offset: 6.0, dstRule: 'NONE' },
+{ code: 'DAC', countryCode: 'BD', name: 'Dhaka, Bangladesh', offset: 6.0, dstRule: 'NONE' },
+{ code: 'LK',  countryCode: 'LK', name: 'Sri Lanka (Colombo CMB)', offset: 5.5, dstRule: 'NONE' },
+{ code: 'CMB', countryCode: 'LK', name: 'Colombo, Sri Lanka', offset: 5.5, dstRule: 'NONE' },
+{ code: 'MV',  countryCode: 'MV', name: 'Maldives (Malé MLE)', offset: 5.0, dstRule: 'NONE' },
+{ code: 'MLE', countryCode: 'MV', name: 'Malé, Maldives', offset: 5.0, dstRule: 'NONE' },
+{ code: 'NP',  countryCode: 'NP', name: 'Nepal (Kathmandu KTM)', offset: 5.75, dstRule: 'NONE' },
+{ code: 'KTM', countryCode: 'NP', name: 'Kathmandu, Nepal', offset: 5.75, dstRule: 'NONE' },
+{ code: 'AE',  countryCode: 'AE', name: 'UAE (AUH / DXB / DWC)', offset: 4.0, dstRule: 'NONE' },
+{ code: 'DXB', countryCode: 'AE', name: 'Dubai, UAE', offset: 4.0, dstRule: 'NONE' },
+{ code: 'SHJ', countryCode: 'AE', name: 'Sharjah, UAE', offset: 4.0, dstRule: 'NONE' },
+{ code: 'QA',  countryCode: 'QA', name: 'Qatar (Doha DOH)', offset: 3.0, dstRule: 'NONE' },
+{ code: 'DOH', countryCode: 'QA', name: 'Doha, Qatar', offset: 3.0, dstRule: 'NONE' },
+{ code: 'SA',  countryCode: 'SA', name: 'Saudi Arabia (RUH / JED / DMM)', offset: 3.0, dstRule: 'NONE' },
+{ code: 'RUH', countryCode: 'SA', name: 'Riyadh, Saudi Arabia', offset: 3.0, dstRule: 'NONE' },
+{ code: 'JED', countryCode: 'SA', name: 'Jeddah, Saudi Arabia', offset: 3.0, dstRule: 'NONE' },
+{ code: 'DMM', countryCode: 'SA', name: 'Dammam, Saudi Arabia', offset: 3.0, dstRule: 'NONE' },
+{ code: 'OM',  countryCode: 'OM', name: 'Oman (Muscat MCT)', offset: 4.0, dstRule: 'NONE' },
+{ code: 'MCT', countryCode: 'OM', name: 'Muscat, Oman', offset: 4.0, dstRule: 'NONE' },
+{ code: 'KW',  countryCode: 'KW', name: 'Kuwait (KWI)', offset: 3.0, dstRule: 'NONE' },
+{ code: 'KWI', countryCode: 'KW', name: 'Kuwait City, Kuwait', offset: 3.0, dstRule: 'NONE' },
+{ code: 'BH',  countryCode: 'BH', name: 'Bahrain (BAH)', offset: 3.0, dstRule: 'NONE' },
+{ code: 'BAH', countryCode: 'BH', name: 'Manama, Bahrain', offset: 3.0, dstRule: 'NONE' },
+{ code: 'JO',  countryCode: 'JO', name: 'Jordan (Amman AMM)', offset: 3.0, dstRule: 'NONE' },
+{ code: 'AMM', countryCode: 'JO', name: 'Amman, Jordan', offset: 3.0, dstRule: 'NONE' },
+{ code: 'EG',  countryCode: 'EG', name: 'Egypt (Cairo CAI / Alexandria ALY)', offset: 2.0, dstRule: 'EGYPT' },
+{ code: 'CAI', countryCode: 'EG', name: 'Cairo, Egypt', offset: 2.0, dstRule: 'EGYPT' },
+{ code: 'ALY', countryCode: 'EG', name: 'Alexandria, Egypt', offset: 2.0, dstRule: 'EGYPT' },
+{ code: 'HBE', countryCode: 'EG', name: 'Borg El Arab (Alexandria), Egypt', offset: 2.0, dstRule: 'EGYPT' },
+{ code: 'LB',  countryCode: 'LB', name: 'Lebanon (Beirut BEY)', offset: 2.0, dstRule: 'EU_MIDDLE_EAST' },
+{ code: 'BEY', countryCode: 'LB', name: 'Beirut, Lebanon', offset: 2.0, dstRule: 'EU_MIDDLE_EAST' },
+{ code: 'TR',  countryCode: 'TR', name: 'Turkey (Istanbul IST)', offset: 3.0, dstRule: 'NONE' },
+{ code: 'IST', countryCode: 'TR', name: 'Istanbul, Turkey', offset: 3.0, dstRule: 'NONE' },
+{ code: 'SAW', countryCode: 'TR', name: 'Istanbul Sabiha Gökçen, Turkey', offset: 3.0, dstRule: 'NONE' },
+{ code: 'KZ',  countryCode: 'KZ', name: 'Kazakhstan (Almaty ALA / NQZ)', offset: 5.0, dstRule: 'NONE' },
+{ code: 'ALA', countryCode: 'KZ', name: 'Almaty, Kazakhstan', offset: 5.0, dstRule: 'NONE' },
+{ code: 'NQZ', countryCode: 'KZ', name: 'Astana, Kazakhstan', offset: 5.0, dstRule: 'NONE' },
+{ code: 'UZ', countryCode: 'UZ', name: 'Uzbekistan (Tashkent TAS)', offset: 5, dstRule: 'NONE' },
+{ code: 'TAS', countryCode: 'UZ', name: 'Tashkent, Uzbekistan', offset: 5, dstRule: 'NONE' },
+{ code: 'GE', countryCode: 'GE', name: 'Georgia (Tbilisi TBS)', offset: 4, dstRule: 'NONE' },
+{ code: 'TBS', countryCode: 'GE', name: 'Tbilisi, Georgia', offset: 4, dstRule: 'NONE' },
+{ code: 'AZ', countryCode: 'AZ', name: 'Azerbaijan (Baku GYD)', offset: 4, dstRule: 'NONE' },
+{ code: 'GYD', countryCode: 'AZ', name: 'Baku, Azerbaijan', offset: 4, dstRule: 'NONE' },
+{ code: 'AM', countryCode: 'AM', name: 'Armenia (Yerevan EVN)', offset: 4, dstRule: 'NONE' },
+{ code: 'EVN', countryCode: 'AM', name: 'Yerevan, Armenia', offset: 4, dstRule: 'NONE' },
+{ code: 'KG', countryCode: 'KG', name: 'Kyrgyzstan (Bishkek FRU)', offset: 6, dstRule: 'NONE' },
+{ code: 'FRU', countryCode: 'KG', name: 'Bishkek, Kyrgyzstan', offset: 6, dstRule: 'NONE' },
+{ code: 'IR', countryCode: 'IR', name: 'Iran (Tehran IKA)', offset: 3.5, dstRule: 'NONE' },
+{ code: 'IKA', countryCode: 'IR', name: 'Tehran, Iran', offset: 3.5, dstRule: 'NONE' },
+{ code: 'IQ', countryCode: 'IQ', name: 'Iraq (Baghdad BGW)', offset: 3, dstRule: 'NONE' },
+{ code: 'BGW', countryCode: 'IQ', name: 'Baghdad, Iraq', offset: 3, dstRule: 'NONE' },
+{ code: 'AF', countryCode: 'AF', name: 'Afghanistan (Kabul KBL)', offset: 4.5, dstRule: 'NONE' },
+{ code: 'KBL', countryCode: 'AF', name: 'Kabul, Afghanistan', offset: 4.5, dstRule: 'NONE' },
+{ code: 'RU', countryCode: 'RU', name: 'Russia (Moscow SVO / DME)', offset: 3, dstRule: 'NONE' },
+{ code: 'SVO', countryCode: 'RU', name: 'Moscow Sheremetyevo, Russia', offset: 3, dstRule: 'NONE' },
+{ code: 'UK', countryCode: 'GB', name: 'United Kingdom (LHR / LGW / MAN)', offset: 0, dstRule: 'EU' },
+{ code: 'GB', countryCode: 'GB', name: 'United Kingdom (LHR / LGW / MAN)', offset: 0, dstRule: 'EU' },
+{ code: 'LHR', countryCode: 'GB', name: 'London Heathrow, UK', offset: 0, dstRule: 'EU' },
+{ code: 'LGW', countryCode: 'GB', name: 'London Gatwick, UK', offset: 0, dstRule: 'EU' },
+{ code: 'MAN', countryCode: 'GB', name: 'Manchester, UK', offset: 0, dstRule: 'EU' },
+{ code: 'FR', countryCode: 'FR', name: 'France (Paris CDG)', offset: 1, dstRule: 'EU' },
+{ code: 'CDG', countryCode: 'FR', name: 'Paris Charles de Gaulle, France', offset: 1, dstRule: 'EU' },
+{ code: 'DE', countryCode: 'DE', name: 'Germany (FRA / MUC)', offset: 1, dstRule: 'EU' },
+{ code: 'FRA', countryCode: 'DE', name: 'Frankfurt, Germany', offset: 1, dstRule: 'EU' },
+{ code: 'MUC', countryCode: 'DE', name: 'Munich, Germany', offset: 1, dstRule: 'EU' },
+{ code: 'NL', countryCode: 'NL', name: 'Netherlands (Amsterdam AMS)', offset: 1, dstRule: 'EU' },
+{ code: 'AMS', countryCode: 'NL', name: 'Amsterdam, Netherlands', offset: 1, dstRule: 'EU' },
+{ code: 'ES', countryCode: 'ES', name: 'Spain (Madrid MAD)', offset: 1, dstRule: 'EU' },
+{ code: 'MAD', countryCode: 'ES', name: 'Madrid, Spain', offset: 1, dstRule: 'EU' },
+{ code: 'IT', countryCode: 'IT', name: 'Italy (Rome FCO / Milan MXP)', offset: 1, dstRule: 'EU' },
+{ code: 'FCO', countryCode: 'IT', name: 'Rome, Italy', offset: 1, dstRule: 'EU' },
+{ code: 'MXP', countryCode: 'IT', name: 'Milan Malpensa, Italy', offset: 1, dstRule: 'EU' },
+{ code: 'CH', countryCode: 'CH', name: 'Switzerland (Zurich ZRH)', offset: 1, dstRule: 'EU' },
+{ code: 'ZRH', countryCode: 'CH', name: 'Zurich, Switzerland', offset: 1, dstRule: 'EU' },
+{ code: 'GR', countryCode: 'GR', name: 'Greece (Athens ATH)', offset: 2, dstRule: 'EU' },
+{ code: 'ATH', countryCode: 'GR', name: 'Athens, Greece', offset: 2, dstRule: 'EU' },
+{ code: 'US', countryCode: 'US', name: 'USA (New York JFK)', offset: -5, dstRule: 'US' },
+{ code: 'JFK', countryCode: 'US', name: 'New York JFK, USA', offset: -5, dstRule: 'US' },
+{ code: 'SG', countryCode: 'SG', name: 'Singapore (SIN)', offset: 8, dstRule: 'NONE' },
+{ code: 'SIN', countryCode: 'SG', name: 'Singapore', offset: 8, dstRule: 'NONE' },
+{ code: 'MY', countryCode: 'MY', name: 'Malaysia (Kuala Lumpur KUL)', offset: 8, dstRule: 'NONE' },
+{ code: 'KUL', countryCode: 'MY', name: 'Kuala Lumpur, Malaysia', offset: 8, dstRule: 'NONE' },
+{ code: 'TH', countryCode: 'TH', name: 'Thailand (Bangkok BKK)', offset: 7, dstRule: 'NONE' },
+{ code: 'BKK', countryCode: 'TH', name: 'Bangkok, Thailand', offset: 7, dstRule: 'NONE' },
+{ code: 'ID', countryCode: 'ID', name: 'Indonesia (Jakarta CGK)', offset: 7, dstRule: 'NONE' },
+{ code: 'CGK', countryCode: 'ID', name: 'Jakarta, Indonesia', offset: 7, dstRule: 'NONE' },
+{ code: 'PH', countryCode: 'PH', name: 'Philippines (Manila MNL)', offset: 8, dstRule: 'NONE' },
+{ code: 'MNL', countryCode: 'PH', name: 'Manila, Philippines', offset: 8, dstRule: 'NONE' },
+{ code: 'HK', countryCode: 'HK', name: 'Hong Kong (HKG)', offset: 8, dstRule: 'NONE' },
+{ code: 'HKG', countryCode: 'HK', name: 'Hong Kong', offset: 8, dstRule: 'NONE' },
+{ code: 'CN', countryCode: 'CN', name: 'China (Beijing PEK)', offset: 8, dstRule: 'NONE' },
+{ code: 'PEK', countryCode: 'CN', name: 'Beijing, China', offset: 8, dstRule: 'NONE' },
+{ code: 'JP', countryCode: 'JP', name: 'Japan (Tokyo NRT)', offset: 9, dstRule: 'NONE' },
+{ code: 'NRT', countryCode: 'JP', name: 'Tokyo Narita, Japan', offset: 9, dstRule: 'NONE' },
+{ code: 'KR', countryCode: 'KR', name: 'South Korea (Seoul ICN)', offset: 9, dstRule: 'NONE' },
+{ code: 'ICN', countryCode: 'KR', name: 'Seoul Incheon, South Korea', offset: 9, dstRule: 'NONE' },
+{ code: 'AU', countryCode: 'AU', name: 'Australia (Sydney SYD)', offset: 10, dstRule: 'AU' },
+{ code: 'SYD', countryCode: 'AU', name: 'Sydney, Australia', offset: 10, dstRule: 'AU' },
+{ code: 'ZA', countryCode: 'ZA', name: 'South Africa (Johannesburg JNB)', offset: 2, dstRule: 'NONE' },
+{ code: 'JNB', countryCode: 'ZA', name: 'Johannesburg, South Africa', offset: 2, dstRule: 'NONE' },
+{ code: 'KE', countryCode: 'KE', name: 'Kenya (Nairobi NBO)', offset: 3, dstRule: 'NONE' },
+{ code: 'NBO', countryCode: 'KE', name: 'Nairobi, Kenya', offset: 3, dstRule: 'NONE' },
+{ code: 'ET', countryCode: 'ET', name: 'Ethiopia (Addis Ababa ADD)', offset: 3, dstRule: 'NONE' },
+{ code: 'ADD', countryCode: 'ET', name: 'Addis Ababa, Ethiopia', offset: 3, dstRule: 'NONE' },
+];
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const fmtOff = o => { const s = o < 0 ? '-' : '+', a = Math.abs(o); return `UTC${s}${pad(Math.floor(a))}:${pad(Math.round((a % 1) * 60))}`; };
+const fmtHM = m => { m = ((m % 1440) + 1440) % 1440; return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`; };
+const lastDow = (y, mo, dow) => { const d = new Date(Date.UTC(y, mo + 1, 0)); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() - dow + 7) % 7)); return d; };
+const nthDow = (y, mo, dow, n) => { const d = new Date(Date.UTC(y, mo, 1)); d.setUTCDate(1 + ((dow - d.getUTCDay() + 7) % 7) + (n - 1) * 7); return d; };
+const at = (d, h) => d.getTime() + h * 3600000;
+
+// Effective UTC offset (hours) of a destination at a given UTC instant
+function offsetAt(dest, t) {
+  const y = new Date(t).getUTCFullYear(), o = dest.offset;
+  let on = false;
+  switch (dest.dstRule) {
+    case 'EU': on = t >= at(lastDow(y, 2, 0), 1) && t < at(lastDow(y, 9, 0), 1); break;
+    case 'EU_MIDDLE_EAST': on = t >= at(lastDow(y, 2, 0), -o) && t < at(lastDow(y, 9, 0), -o); break; // Lebanon: 00:00 local
+    case 'EGYPT': on = t >= at(lastDow(y, 3, 5), -o) && t < at(lastDow(y, 9, 4), 24 - (o + 1)); break; // last Fri Apr -> last Thu Oct (24:00)
+    case 'US': on = t >= at(nthDow(y, 2, 0, 2), 2 - o) && t < at(nthDow(y, 10, 0, 1), 2 - (o + 1)); break;
+    case 'AU': on = t >= at(nthDow(y, 9, 0, 1), 2 - o) || t < at(nthDow(y, 3, 0, 1), 2 - o); break; // southern hemisphere
+  }
+  return on ? o + 1 : o;
+}
+const dstNote = d => d.dstRule === 'NONE' ? '' : ' • DST rule auto';
+
+let abMode = 'local', current = DESTINATIONS[0];
+
+function parseHM(str, allowThree) {
+  const dg = String(str).replace(/\D/g, '');
+  if (!dg) return null;
+  let h, m;
+  if (dg.length <= 2) { h = +dg; m = 0; }
+  else if (dg.length === 3) { h = +dg[0]; m = +dg.slice(1); }
+  else { h = +dg.slice(0, 2); m = +dg.slice(2, 4); }
+  return m > 59 ? null : { h, m };
+}
+const parseAirborne = s => { const r = parseHM(s); return r && r.h < 24 ? r.h * 60 + r.m : null; };
+const parseEET = s => { const r = parseHM(s); return r ? r.h * 60 + r.m : null; };
+
+function findDest(q) {
+  q = q.trim().toUpperCase(); if (!q) return null;
+  return DESTINATIONS.find(d => d.code === q) || DESTINATIONS.find(d => d.countryCode === q) ||
+    DESTINATIONS.find(d => d.code.startsWith(q) || d.name.toUpperCase().includes(q)) || null;
+}
+
+function calc() {
+  const ab = parseAirborne($('airborne-input').value), eet = parseEET($('eet-input').value);
+  if (ab == null || eet == null) return;
+  const now = new Date();
+  const baseLocalDate = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) + (now.getUTCHours() + AUH_OFFSET >= 24 ? 86400000 : 0); // today's AUH date
+  const baseDate = abMode === 'local' ? baseLocalDate : Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const depUTC = abMode === 'local' ? baseDate + ab * 60000 - AUH_OFFSET * 3600000 : baseDate + ab * 60000;
+  const arrUTC = depUTC + eet * 60000;
+  const off = offsetAt(current, arrUTC);
+  const dayDiff = (t, o, ref) => Math.round((Math.floor((t + o * 3600000) / 86400000) - Math.floor((ref) / 86400000)));
+  const depAuhDay = Math.floor((depUTC + AUH_OFFSET * 3600000) / 86400000);
+  const localDay = Math.floor((arrUTC + off * 3600000) / 86400000) - depAuhDay;
+  const utcDay = Math.floor(arrUTC / 86400000) - Math.floor(depUTC / 86400000);
+  const lbl = n => n === 0 ? 'SAME DAY' : n > 0 ? `+${n} DAY` : `${n} DAY`;
+  const hm = (t, o) => { const d = new Date(t + o * 3600000); return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
+
+  $('ab-converted-tag').textContent = abMode === 'local' ? `= ${hm(depUTC, 0)}Z (UTC)` : `= ${hm(depUTC, AUH_OFFSET)} AUH LT`;
+  $('eet-total-mins').textContent = `${Math.floor(eet / 60)}h ${pad(eet % 60)}m (${eet}m)`;
+  $('out-local-time').textContent = hm(arrUTC, off);
+  $('out-local-code').textContent = current.code;
+  $('out-local-day').textContent = lbl(localDay);
+  $('out-local-meta').textContent = `${current.name.replace(/ \(.*\)/, '')} (${fmtOff(off)})${off !== current.offset ? ' • DST' : ''}`;
+  $('out-utc-time').textContent = hm(arrUTC, 0) + 'Z';
+  $('out-utc-day').textContent = utcDay === 0 ? 'UTC' : lbl(utcDay);
+  $('out-auh-ref').textContent = `AUH Base Time: ${hm(arrUTC, AUH_OFFSET)} LT`;
+  $('dest-tz-pill').textContent = `${current.code} • ${current.name.split(',').pop().trim().replace(/ \(.*\)/, '')} (${fmtOff(off)})`;
+  $('summary-line').textContent = `DEP AUH ${hm(depUTC, AUH_OFFSET)} LT (${hm(depUTC, 0)}Z) • EET ${fmtHM(eet)} • ETA ${current.code} ${hm(arrUTC, off)} LT (${hm(arrUTC, 0)}Z)`;
+}
+
+function setMode(m) {
+  abMode = m;
+  const on = 'px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-bold', off = 'px-2 py-0.5 rounded-md text-slate-400 hover:text-white';
+  $('ab-mode-local').className = m === 'local' ? on : off; $('ab-mode-utc').className = m === 'utc' ? on : off;
+  calc();
+}
+function tick() {
+  const n = new Date();
+  $('live-utc-clock').textContent = `${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}Z`;
+  $('live-auh-clock').textContent = hmNow(AUH_OFFSET);
+}
+const hmNow = o => { const d = new Date(Date.now() + o * 3600000); return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
+
+const dd = $('dest-dropdown'), di = $('dest-input');
+function showList() {
+  const q = di.value.trim().toUpperCase();
+  const list = DESTINATIONS.filter(d => !q || d.code.startsWith(q) || d.countryCode === q || d.name.toUpperCase().includes(q)).slice(0, 40);
+  dd.innerHTML = '';
+  list.forEach(d => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.className = 'w-full text-left px-3 py-2 hover:bg-slate-800 font-mono text-xs text-slate-200';
+    b.innerHTML = `<span class="font-bold text-emerald-300">${d.code}</span> &nbsp;${d.name} <span class="text-slate-500">${fmtOff(d.offset)}${dstNote(d)}</span>`;
+    b.addEventListener('mousedown', e => { e.preventDefault(); current = d; di.value = d.code; dd.classList.add('hidden'); calc(); });
+    dd.appendChild(b);
+  });
+  dd.classList.toggle('hidden', !list.length);
+}
+di.addEventListener('input', () => { const f = findDest(di.value); if (f) { current = f; calc(); } showList(); });
+di.addEventListener('focus', () => { di.select(); showList(); });
+di.addEventListener('blur', () => { dd.classList.add('hidden'); di.value = current.code; });
+
+['airborne-input', 'eet-input'].forEach(id => {
+  const el = $(id);
+  el.addEventListener('input', calc);
+  el.addEventListener('blur', () => { const v = id === 'eet-input' ? parseEET(el.value) : parseAirborne(el.value); if (v != null) el.value = fmtHM(v); calc(); });
+});
+document.querySelectorAll('.eet-step-btn').forEach(b => b.addEventListener('click', () => {
+  const v = parseEET($('eet-input').value) || 0; $('eet-input').value = fmtHM(Math.max(0, v + +b.dataset.eetStep)); calc();
+}));
+$('ab-mode-local').addEventListener('click', () => setMode('local'));
+$('ab-mode-utc').addEventListener('click', () => setMode('utc'));
+$('ab-now-btn').addEventListener('click', () => { $('airborne-input').value = hmNow(abMode === 'local' ? AUH_OFFSET : 0); calc(); });
+$('copy-btn').addEventListener('click', async () => {
+  const txt = $('summary-line').textContent;
+  try { await navigator.clipboard.writeText(txt); } catch (e) {
+    const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+  }
+  $('copy-btn-label').textContent = 'COPIED'; setTimeout(() => $('copy-btn-label').textContent = 'COPY', 1200);
+});
+tick(); setInterval(tick, 1000); calc();
+
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+        }
+    </script>
+</body>
+</html>
