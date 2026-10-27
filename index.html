@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AUH ETA Dashboard</title>
+  <meta name="theme-color" content="#0b1120" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #111827 0%, #020817 55%, #020617 100%);
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 font-sans antialiased">
+  <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
+          <i class="ph-fill ph-rocket text-2xl"></i>
+        </div>
+        <div>
+          <p class="font-mono text-xs uppercase tracking-[0.25em] text-cyan-300">AUH</p>
+          <h1 class="text-2xl sm:text-3xl font-bold">ETA Dashboard</h1>
+        </div>
+      </div>
+
+      <div id="auth-panel" class="flex items-center gap-3 hidden">
+        <div class="rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-right">
+          <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Signed in</div>
+          <div id="user-label" class="font-mono text-sm font-semibold text-white"></div>
+        </div>
+        <button id="signout-btn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-semibold border border-slate-700 transition">
+          Sign out
+        </button>
+      </div>
+    </header>
+
+    <main id="app-shell" class="grid gap-6 lg:grid-cols-[1.1fr_1.4fr]">
+      <section id="login-card" class="glass border border-slate-800 rounded-3xl p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-300">Access</p>
+            <h2 class="text-2xl font-bold">Welcome back</h2>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center">
+            <i class="ph ph-user-check text-xl"></i>
+          </div>
+        </div>
+
+        <form id="login-form" class="space-y-4">
+          <div>
+            <label for="name-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Name</label>
+            <input id="name-input" type="text" placeholder="e.g. Ali Raza" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none" required />
+          </div>
+
+          <div>
+            <label for="role-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Role</label>
+            <select id="role-input" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none">
+              <option value="Ops Controller">Ops Controller</option>
+              <option value="Station Coordinator">Station Coordinator</option>
+              <option value="Duty Manager">Duty Manager</option>
+              <option value="Supervisor">Supervisor</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="password-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Access Code</label>
+            <input id="password-input" type="password" placeholder="Enter the gate code" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none" required />
+          </div>
+
+          <button type="submit" class="w-full rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 transition shadow-lg shadow-cyan-500/20">
+            Open Dashboard
+          </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-slate-800 text-sm text-slate-400">
+          Demo quick access: <button id="demo-btn" class="text-cyan-300 hover:text-cyan-200 font-semibold">Continue as Demo User</button>
+        </div>
+      </section>
+
+      <section id="dashboard-card" class="glass border border-slate-800 rounded-3xl p-6 shadow-2xl hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-emerald-300">Overview</p>
+            <h2 class="text-2xl font-bold">Operations Dashboard</h2>
+          </div>
+          <a href="calculator.html" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 transition">
+            <i class="ph ph-calculator"></i>
+            Open Calculator
+          </a>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3 mb-6">
+          <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+            <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Flights</div>
+            <div class="mt-2 text-3xl font-extrabold font-mono text-cyan-300">12</div>
+            <div class="mt-1 text-xs text-slate-400">Active routes</div>
+          </div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+            <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Recent</div>
+            <div id="recent-count" class="mt-2 text-3xl font-extrabold font-mono text-emerald-300">0</div>
+            <div class="mt-1 text-xs text-slate-400">Saved ETAs</div>
+          </div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+            <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Favourites</div>
+            <div id="fav-count" class="mt-2 text-3xl font-extrabold font-mono text-amber-300">0</div>
+            <div class="mt-1 text-xs text-slate-400">Pinned routes</div>
+          </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-2">
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-lg">Recent ETA searches</h3>
+              <i class="ph ph-clock-counter-clockwise text-lg text-slate-400"></i>
+            </div>
+            <div id="recent-list" class="space-y-2"></div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-lg">Favourite destinations</h3>
+              <i class="ph ph-star text-lg text-amber-300"></i>
+            </div>
+            <div id="fav-list" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const USER_KEY = 'auhEtaUser';
+    const SESSION_KEY = 'auhEtaSession';
+    const RECENT_KEY = 'auhEtaRecent';
+    const FAV_KEY = 'auhEtaFav';
+
+    const loginCard = document.getElementById('login-card');
+    const dashboardCard = document.getElementById('dashboard-card');
+    const authPanel = document.getElementById('auth-panel');
+    const userLabel = document.getElementById('user-label');
+    const loginForm = document.getElementById('login-form');
+    const demoBtn = document.getElementById('demo-btn');
+    const signoutBtn = document.getElementById('signout-btn');
+
+    function getStoredJson(key, fallback) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function setStoredJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function getUser() {
+      return getStoredJson(USER_KEY, null);
+    }
+
+    function getRecent() {
+      return getStoredJson(RECENT_KEY, []);
+    }
+
+    function getFav() {
+      return getStoredJson(FAV_KEY, []);
+    }
+
+    function buildHash(value) {
+      let hash = 0;
+      for (let i = 0; i < value.length; i++) {
+        hash = (hash << 5) - hash + value.charCodeAt(i);
+        hash |= 0;
+      }
+      return String(Math.abs(hash));
+    }
+
+    function renderDashboard() {
+      const user = getUser();
+      const signedIn = !!user && localStorage.getItem(SESSION_KEY) === user.hash;
+
+      loginCard.classList.toggle('hidden', signedIn);
+      dashboardCard.classList.toggle('hidden', !signedIn);
+      authPanel.classList.toggle('hidden', !signedIn);
+
+      if (!signedIn) return;
+
+      userLabel.textContent = `${user.name} • ${user.role}`;
+      document.getElementById('recent-count').textContent = String(getRecent().length);
+      document.getElementById('fav-count').textContent = String(getFav().length);
+
+      const recentList = document.getElementById('recent-list');
+      const favList = document.getElementById('fav-list');
+      const recent = getRecent();
+      const favourites = getFav();
+
+      if (!recent.length) {
+        recentList.innerHTML = '<div class="rounded-xl border border-dashed border-slate-700 px-3 py-3 text-sm text-slate-400">No ETA history yet.</div>';
+      } else {
+        recentList.innerHTML = recent.slice(0, 5).map((item, index) => {
+          const code = item.dest || 'N/A';
+          return `
+            <a href="calculator.html?recent=${index}" class="block rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 hover:border-cyan-400 transition">
+              <div class="flex justify-between gap-3 items-center">
+                <div class="font-mono text-sm font-bold text-emerald-300">${code}</div>
+                <div class="text-[10px] uppercase tracking-[0.2em] text-slate-500">${item.mode === 'local' ? 'AUH LT' : 'UTC'}</div>
+              </div>
+              <div class="mt-1 text-xs text-slate-300">Airborne ${item.ab} • EET ${item.eet}</div>
+            </a>
+          `;
+        }).join('');
+      }
+
+      if (!favourites.length) {
+        favList.innerHTML = '<div class="rounded-xl border border-dashed border-slate-700 px-3 py-3 text-sm text-slate-400">No pinned destinations yet.</div>';
+      } else {
+        favList.innerHTML = favourites.slice(0, 8).map(code => `
+          <a href="calculator.html?dest=${code}" class="block rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 hover:border-amber-400 transition">
+            <div class="flex items-center justify-between gap-3">
+              <div class="font-mono text-sm font-bold text-amber-300">${code}</div>
+              <i class="ph ph-arrow-right text-slate-400"></i>
+            </div>
+          </a>
+        `).join('');
+      }
+    }
+
+    function signInUser(name, role, passcode) {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const hash = buildHash(`${trimmed}|${role}|${passcode}`);
+      const user = { name: trimmed, role, hash };
+      setStoredJson(USER_KEY, user);
+      localStorage.setItem(SESSION_KEY, hash);
+      renderDashboard();
+    }
+
+    loginForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const name = document.getElementById('name-input').value;
+      const role = document.getElementById('role-input').value;
+      const pass = document.getElementById('password-input').value;
+      signInUser(name, role, pass);
+    });
+
+    demoBtn.addEventListener('click', function () {
+      document.getElementById('name-input').value = 'Demo User';
+      document.getElementById('role-input').value = 'Ops Controller';
+      document.getElementById('password-input').value = 'demo';
+      signInUser('Demo User', 'Ops Controller', 'demo');
+    });
+
+    signoutBtn.addEventListener('click', function () {
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(SESSION_KEY);
+      renderDashboard();
+    });
+
+    renderDashboard();
+  </script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</body>
+</html>
