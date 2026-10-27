@@ -1,64 +1,21 @@
-// AUH ETA service worker: keeps the app working with no signal.
-// Change the version number each time you upload new files, so phones fetch the update.
-const CACHE = 'auh-eta-v5';
-
-// Your own pages
-const LOCAL = [
-  './',
-  'index.html',
-  'calculator.html',
-  'manifest.json',
-  'icons/icon-192.png'
-];
-
-// Libraries the pages load from the internet (saved on first online visit)
-const CDN = [
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/@phosphor-icons/web',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap'
-];
-
-self.addEventListener('install', event => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE);
-    await Promise.all(LOCAL.map(u => cache.add(u).catch(() => {})));
-    await Promise.all(CDN.map(async u => {
-      try { await cache.put(u, await fetch(u, { mode: 'no-cors' })); } catch (e) {}
-    }));
-    self.skipWaiting();
-  })());
+const CACHE = "auh-eta-v1";
+const CORE = ["./", "./index.html", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png"];
+self.addEventListener("install", e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)));
+  self.skipWaiting();
 });
-
-self.addEventListener('activate', event => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
-    await self.clients.claim();
-  })());
+self.addEventListener("activate", e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+  self.clients.claim();
 });
-
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET' || !req.url.startsWith('http')) return;
-
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    const cached = await cache.match(req, { ignoreSearch: true });
-
-    if (req.mode === 'navigate') {
-      try {
-        const fresh = await fetch(req);
-        if (fresh && fresh.ok) cache.put(req, fresh.clone());
-        return fresh;
-      } catch (e) {
-        return cached || (await cache.match('index.html')) || Response.error();
-      }
-    }
-
-    const refresh = fetch(req).then(res => {
-      if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone());
+// Network first: edits you make online show up immediately; cache is the offline fallback.
+self.addEventListener("fetch", e => {
+  if (e.request.method !== "GET") return;
+  e.respondWith(
+    fetch(e.request).then(res => {
+      const copy = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, copy));
       return res;
-    }).catch(() => null);
-    return cached || (await refresh) || Response.error();
-  })());
+    }).catch(() => caches.match(e.request))
+  );
 });
