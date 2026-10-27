@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AUH ETA Dashboard</title>
+    <meta name="theme-color" content="#0b1120">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AUH ETA">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } }
+        }
+    </script>
+    <style>
+        body { background-color: #0b1120; color: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased p-3 sm:p-6">
+    <!-- SIGN IN / CREATE ACCOUNT SCREEN -->
+    <div id="auth" style="display:none" class="min-h-[85vh] items-center justify-center">
+        <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                    <i class="ph-fill ph-lock-key text-lg"></i>
+                </div>
+                <div>
+                    <h1 id="auth-title" class="font-mono font-bold text-sm text-white tracking-wide">Sign in</h1>
+                    <p id="auth-sub" class="text-[11px] text-slate-400"></p>
+                </div>
+            </div>
+            <div class="create-only space-y-1">
+                <label for="auth-name" class="text-xs font-mono text-slate-300 font-bold">Your name</label>
+                <input id="auth-name" type="text" maxlength="30" autocomplete="name" placeholder="e.g. Jack"
+                    class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 font-mono text-sm text-white placeholder:text-slate-500 focus:outline-none">
+            </div>
+            <div class="space-y-1">
+                <label for="auth-pin" class="text-xs font-mono text-slate-300 font-bold">PIN (4 to 6 digits)</label>
+                <input id="auth-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="••••"
+                    class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 font-mono text-lg tracking-widest text-white placeholder:text-slate-600 focus:outline-none">
+            </div>
+            <div class="create-only space-y-1">
+                <label for="auth-pin2" class="text-xs font-mono text-slate-300 font-bold">Confirm PIN</label>
+                <input id="auth-pin2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="••••"
+                    class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 font-mono text-lg tracking-widest text-white placeholder:text-slate-600 focus:outline-none">
+            </div>
+            <label class="flex items-center gap-2 text-xs text-slate-300">
+                <input id="auth-keep" type="checkbox" checked class="accent-cyan-500"> Keep me signed in on this device
+            </label>
+            <p id="auth-err" class="text-xs text-rose-400 min-h-[1rem]"></p>
+            <button type="button" id="auth-btn" class="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono text-sm font-bold transition active:scale-[0.99]">Sign in</button>
+            <button type="button" id="auth-reset" class="text-xs font-mono text-slate-400 hover:text-white">Forgot PIN? Reset this device</button>
+        </div>
+    </div>
+
+    <div id="app" style="display:none" class="max-w-xl w-full mx-auto space-y-4">
+
+        <!-- HEADER -->
+        <header class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                    <i class="ph-fill ph-airplane-takeoff text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-mono font-bold text-sm text-white tracking-wide">AUH ETA DASHBOARD</h1>
+                    <p class="text-[11px] font-mono text-cyan-400">Origin fixed: AUH (UTC+04:00)</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-right font-mono">
+                <div class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1">
+                    <div class="text-[9px] text-slate-400">AUH LT</div>
+                    <div id="live-auh-clock" class="text-xs font-bold text-cyan-300">00:00</div>
+                </div>
+                <div class="bg-slate-950 border border-amber-500/30 rounded-lg px-2.5 py-1">
+                    <div class="text-[9px] text-amber-400">UTC (Z)</div>
+                    <div id="live-utc-clock" class="text-xs font-bold text-amber-400">00:00Z</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- SIGNED IN AS -->
+        <div class="flex items-center justify-between px-1 font-mono text-xs text-slate-400">
+            <span>Signed in as <span id="who" class="text-slate-200 font-bold"></span></span>
+            <button type="button" id="signout-btn" class="hover:text-white">Sign out</button>
+        </div>
+
+        <!-- OPEN THE CALCULATOR -->
+        <a href="calculator.html" class="block bg-emerald-950/30 border-2 border-emerald-500/60 hover:bg-emerald-950/50 active:scale-[0.99] transition rounded-2xl p-5">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <div class="font-mono text-lg font-extrabold text-white">Open ETA Calculator</div>
+                    <div class="text-xs text-slate-300 mt-1">Work out arrival time at the destination and in Zulu.</div>
+                </div>
+                <div class="w-12 h-12 shrink-0 rounded-xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-300">
+                    <i class="ph-bold ph-calculator text-2xl"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- FAVOURITE DESTINATIONS -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl">
+            <h2 class="font-mono text-sm font-bold text-slate-200 mb-3 flex items-center gap-2"><i class="ph-fill ph-star text-amber-400"></i> Favourite destinations</h2>
+            <div id="fav-list" class="flex flex-wrap gap-2"></div>
+        </section>
+
+        <!-- RECENT CALCULATIONS -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="font-mono text-sm font-bold text-slate-200">Recent calculations</h2>
+                <button type="button" id="clear-btn" class="hidden text-xs font-mono text-slate-400 hover:text-white">Clear all</button>
+            </div>
+            <div id="recent-list" class="space-y-2"></div>
+        </section>
+
+        <!-- SETTINGS -->
+        <details class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+            <summary class="cursor-pointer select-none px-4 py-3 font-mono text-sm font-bold text-slate-200 flex items-center gap-2"><i class="ph ph-gear"></i> Settings</summary>
+            <div class="px-4 pb-4 space-y-5">
+                <div class="space-y-1.5">
+                    <label for="set-name" class="text-xs font-mono text-slate-300 font-bold">Your name</label>
+                    <div class="flex gap-2">
+                        <input id="set-name" type="text" maxlength="30" class="flex-1 min-w-0 bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2 font-mono text-sm text-white focus:outline-none">
+                        <button type="button" id="name-save" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-xs font-bold">Save</button>
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <div class="text-xs font-mono text-slate-300 font-bold">Change PIN</div>
+                    <input id="set-pin-cur" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="Current PIN" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2 font-mono text-sm text-white placeholder:text-slate-600 focus:outline-none">
+                    <input id="set-pin-new" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="New PIN (4 to 6 digits)" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2 font-mono text-sm text-white placeholder:text-slate-600 focus:outline-none">
+                    <input id="set-pin-new2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="Confirm new PIN" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2 font-mono text-sm text-white placeholder:text-slate-600 focus:outline-none">
+                    <button type="button" id="pin-save" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-xs font-bold">Change PIN</button>
+                </div>
+                <div class="space-y-1.5">
+                    <div class="text-xs font-mono text-slate-300 font-bold">Data on this device</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="copy-hist" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold flex items-center gap-1.5"><i class="ph-bold ph-copy"></i> Copy history</button>
+                        <button type="button" id="clear-fav" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold">Clear favourites</button>
+                    </div>
+                </div>
+                <p id="set-msg" class="text-xs min-h-[1rem]"></p>
+            </div>
+        </details>
+    </div>
+
+    <script>
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const HKEY = 'auhEtaRecent';
+const getRecent = () => { try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { return []; } };
+
+function tick() {
+  const n = new Date(), a = new Date(Date.now() + 4 * 3600000);
+  $('live-utc-clock').textContent = `${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}Z`;
+  $('live-auh-clock').textContent = `${pad(a.getUTCHours())}:${pad(a.getUTCMinutes())}`;
+}
+
+function ago(ts) {
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} h ago`;
+  return `${Math.floor(h / 24)} d ago`;
+}
+
+function render() {
+  renderFav();
+  const list = getRecent(), box = $('recent-list');
+  box.innerHTML = '';
+  $('clear-btn').classList.toggle('hidden', !list.length);
+  if (!list.length) {
+    box.innerHTML = '<p class="text-sm text-slate-400">Nothing yet. Your last 10 calculations will show here once you use the calculator.</p>';
+    return;
+  }
+  list.forEach((r, i) => {
+    const a = document.createElement('a');
+    a.href = `calculator.html?recent=${i}`;
+    a.className = 'flex items-center gap-3 bg-slate-950 border border-slate-800 hover:border-cyan-500/50 rounded-xl px-3 py-2.5 transition';
+    a.innerHTML = `
+      <i class="ph ph-clock-counter-clockwise text-lg text-slate-500"></i>
+      <div class="flex-1 min-w-0">
+        <div class="font-mono text-sm font-bold text-emerald-300">${r.dest}</div>
+        <div class="font-mono text-[11px] text-slate-400 truncate">Airborne ${r.ab} ${r.mode === 'local' ? 'LT' : 'Z'} &bull; EET ${r.eet}</div>
+      </div>
+      <span class="font-mono text-[10px] text-slate-500 shrink-0">${ago(r.ts)}</span>`;
+    box.appendChild(a);
+  });
+}
+
+$('clear-btn').addEventListener('click', () => {
+  try { localStorage.removeItem(HKEY); } catch (e) {}
+  render();
+});
+
+/* ---------- SIGN IN (PIN stored on this device) ---------- */
+const UKEY = 'auhEtaUser', SKEY = 'auhEtaSession';
+const getUser = () => { try { return JSON.parse(localStorage.getItem(UKEY) || 'null'); } catch (e) { return null; } };
+const getToken = () => { try { return localStorage.getItem(SKEY) || sessionStorage.getItem(SKEY); } catch (e) { return null; } };
+async function sha(text) {
+  if (window.crypto && crypto.subtle) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  let h = 5381; for (const c of text) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0; return 'f' + h.toString(16);
+}
+const isSignedIn = () => { const u = getUser(); return !!u && getToken() === u.hash; };
+const setErr = t => { $('auth-err').textContent = t || ''; };
+let fails = 0, lockUntil = 0;
+
+function showApp() {
+  $('auth').style.display = 'none';
+  $('app').style.display = '';
+  $('who').textContent = getUser().name;
+  $('set-name').value = getUser().name;
+  render();
+}
+function showAuth() {
+  const create = !getUser();
+  $('app').style.display = 'none';
+  $('auth').style.display = 'flex';
+  document.querySelectorAll('.create-only').forEach(el => el.style.display = create ? '' : 'none');
+  $('auth-title').textContent = create ? 'Create your sign in' : 'Sign in';
+  $('auth-sub').textContent = create ? 'Set a PIN to open the app on this device.' : `Welcome back, ${getUser().name}.`;
+  $('auth-btn').textContent = create ? 'Create and open' : 'Sign in';
+  $('auth-reset').style.display = create ? 'none' : '';
+  ['auth-name', 'auth-pin', 'auth-pin2'].forEach(id => $(id).value = '');
+  setErr('');
+}
+async function submitAuth() {
+  const pin = $('auth-pin').value.trim();
+  if (!/^\d{4,6}$/.test(pin)) return setErr('PIN must be 4 to 6 digits.');
+  let user = getUser();
+  if (!user) {                                   // create account
+    const name = $('auth-name').value.trim();
+    if (!name) return setErr('Enter your name.');
+    if (pin !== $('auth-pin2').value.trim()) return setErr('The two PINs do not match.');
+    const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    user = { name, salt, hash: await sha(salt + pin) };
+    try { localStorage.setItem(UKEY, JSON.stringify(user)); } catch (e) { return setErr('This browser blocked saving. Turn off private mode.'); }
+  } else {                                       // sign in
+    if (Date.now() < lockUntil) return setErr(`Too many tries. Wait ${Math.ceil((lockUntil - Date.now()) / 1000)} s.`);
+    if (await sha(user.salt + pin) !== user.hash) {
+      if (++fails >= 5) { fails = 0; lockUntil = Date.now() + 30000; return setErr('Too many tries. Wait 30 s.'); }
+      return setErr('Wrong PIN.');
+    }
+  }
+  fails = 0;
+  try { localStorage.removeItem(SKEY); sessionStorage.removeItem(SKEY); (($('auth-keep').checked) ? localStorage : sessionStorage).setItem(SKEY, user.hash); } catch (e) {}
+  showApp();
+}
+$('auth-btn').addEventListener('click', submitAuth);
+['auth-name', 'auth-pin', 'auth-pin2'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); }));
+$('signout-btn').addEventListener('click', () => {
+  try { localStorage.removeItem(SKEY); sessionStorage.removeItem(SKEY); } catch (e) {}
+  showAuth();
+});
+$('auth-reset').addEventListener('click', () => {
+  if (!confirm('This removes the sign in and the saved history on this device. Continue?')) return;
+  try { ['auhEtaUser', 'auhEtaSession', 'auhEtaRecent', 'auhEtaEET', 'auhEtaFav'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k); }); } catch (e) {}
+  showAuth();
+});
+
+/* ---------- FAVOURITES ---------- */
+const FKEY = 'auhEtaFav';
+const getFav = () => { try { return JSON.parse(localStorage.getItem(FKEY) || '[]'); } catch (e) { return []; } };
+const setFav = l => { try { localStorage.setItem(FKEY, JSON.stringify(l)); } catch (e) {} };
+function renderFav() {
+  const list = getFav(), box = $('fav-list');
+  box.innerHTML = '';
+  if (!list.length) {
+    box.innerHTML = '<p class="text-sm text-slate-400">No favourites yet. In the calculator, tap the star next to the destination to pin it here.</p>';
+    return;
+  }
+  list.forEach(code => {
+    const wrap = document.createElement('div');
+    wrap.className = 'inline-flex items-stretch rounded-xl border border-slate-700 bg-slate-950 overflow-hidden';
+    const a = document.createElement('a');
+    a.href = `calculator.html?dest=${encodeURIComponent(code)}`;
+    a.className = 'px-3 py-2 font-mono text-sm font-bold text-emerald-300 hover:bg-slate-800';
+    a.textContent = code;
+    const x = document.createElement('button');
+    x.type = 'button'; x.title = 'Remove ' + code;
+    x.className = 'px-2 text-slate-500 hover:text-white border-l border-slate-800';
+    x.innerHTML = '<i class="ph-bold ph-x text-xs"></i>';
+    x.addEventListener('click', () => { setFav(getFav().filter(c => c !== code)); renderFav(); });
+    wrap.appendChild(a); wrap.appendChild(x); box.appendChild(wrap);
+  });
+}
+
+/* ---------- SETTINGS ---------- */
+const setMsg = (t, ok) => { const m = $('set-msg'); m.textContent = t || ''; m.className = 'text-xs min-h-[1rem] ' + (ok ? 'text-emerald-400' : 'text-rose-400'); };
+$('name-save').addEventListener('click', () => {
+  const n = $('set-name').value.trim();
+  if (!n) return setMsg('Enter a name.');
+  const u = getUser(); u.name = n;
+  try { localStorage.setItem(UKEY, JSON.stringify(u)); } catch (e) { return setMsg('Could not save on this browser.'); }
+  $('who').textContent = n; setMsg('Name saved.', true);
+});
+$('pin-save').addEventListener('click', async () => {
+  const u = getUser(), cur = $('set-pin-cur').value.trim(), np = $('set-pin-new').value.trim(), np2 = $('set-pin-new2').value.trim();
+  if (await sha(u.salt + cur) !== u.hash) return setMsg('Current PIN is wrong.');
+  if (!/^\d{4,6}$/.test(np)) return setMsg('New PIN must be 4 to 6 digits.');
+  if (np !== np2) return setMsg('The new PINs do not match.');
+  const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const nu = { name: u.name, salt, hash: await sha(salt + np) };
+  try {
+    localStorage.setItem(UKEY, JSON.stringify(nu));
+    (localStorage.getItem(SKEY) !== null ? localStorage : sessionStorage).setItem(SKEY, nu.hash);   // stay signed in on this device
+  } catch (e) { return setMsg('Could not save on this browser.'); }
+  ['set-pin-cur', 'set-pin-new', 'set-pin-new2'].forEach(id => $(id).value = '');
+  setMsg('PIN changed.', true);
+});
+$('copy-hist').addEventListener('click', async () => {
+  const l = getRecent();
+  if (!l.length) return setMsg('No history to copy yet.');
+  const txt = l.map(r => `${r.dest}  Airborne ${r.ab} ${r.mode === 'local' ? 'LT' : 'Z'}  EET ${r.eet}  (${new Date(r.ts).toLocaleString()})`).join('\n');
+  try { await navigator.clipboard.writeText(txt); } catch (e) {
+    const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+  }
+  setMsg('History copied.', true);
+});
+$('clear-fav').addEventListener('click', () => { setFav([]); renderFav(); setMsg('Favourites cleared.', true); });
+
+tick(); setInterval(tick, 1000);
+isSignedIn() ? showApp() : showAuth();
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+        }
+    </script>
+</body>
+</html>
