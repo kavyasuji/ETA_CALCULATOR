@@ -39,7 +39,7 @@
           <form id="login-form" class="space-y-4">
             <div>
               <label for="name-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Name</label>
-              <input id="name-input" type="text" placeholder="e.g. Ali Raza" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-500" />
+              <input id="name-input" type="text" placeholder="e.g. Ali Raza" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400" />
             </div>
 
             <div>
@@ -57,7 +57,7 @@
 
             <div>
               <label for="password-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Access Code</label>
-              <input id="password-input" type="password" placeholder="Enter the gate code" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-500" />
+              <input id="password-input" type="password" placeholder="Enter the gate code" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400" />
             </div>
 
             <button type="submit" class="w-full rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 transition shadow-lg shadow-cyan-500/20">
@@ -125,7 +125,7 @@
           return;
         }
 
-        alert(`Welcome ${name} (${role)\nYour access code has been accepted.`);
+        alert(`Welcome ${name} (${role})\nYour access code has been accepted.`);
       });
 
       demoBtn.addEventListener('click', function () {
