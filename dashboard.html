@@ -15,6 +15,10 @@
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
       }
+      .digital-clock {
+        font-family: "JetBrains Mono", "SFMono-Regular", monospace;
+        letter-spacing: 0.08em;
+      }
     </style>
   </head>
   <body class="min-h-screen text-slate-100 font-sans antialiased">
@@ -30,6 +34,12 @@
             <span class="text-slate-500">Signed in as</span>
             <span id="user-name" class="font-semibold text-white">Demo User</span>
           </div>
+
+          <div class="rounded-2xl border border-cyan-500/30 bg-slate-900/90 px-3 py-2 shadow-lg shadow-cyan-900/20">
+            <div class="text-[10px] uppercase tracking-[0.22em] text-slate-400">Local Time</div>
+            <div id="digital-clock" class="digital-clock mt-1 text-lg font-bold text-cyan-300">00:00:00</div>
+          </div>
+
           <button id="signout-btn" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-200 hover:border-slate-500">
             Sign Out
           </button>
@@ -212,7 +222,8 @@
 
       function updateClock() {
         const now = new Date();
-        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('digital-clock').textContent = time;
         document.getElementById('weather-clock').textContent = time;
       }
 
@@ -223,7 +234,7 @@
       });
 
       updateClock();
-      setInterval(updateClock, 30000);
+      setInterval(updateClock, 1000);
     </script>
   </body>
 </html>
