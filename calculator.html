@@ -4,36 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AUH Flight ETA & Zulu Time Calculator (24H)</title>
-    <!-- PWA & Mobile Meta -->
     <meta name="theme-color" content="#0b1120">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AUH ETA">
-    <!-- PWA Manifest & Icons -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <!-- Sign in guard: not signed in -> go to the Dashboard sign in page -->
     <script>
         (function () {
             try {
-                var u = JSON.parse(localStorage.getItem('auhEtaUser') || 'null');
-                var t = localStorage.getItem('auhEtaSession') || sessionStorage.getItem('auhEtaSession');
-                var expected = u && (u.hash || u.password || '');
-                if (!u || !expected || (t !== expected && t !== u.hash && t !== u.password)) {
+                const user = JSON.parse(localStorage.getItem('auhEtaUser') || 'null');
+                const session = localStorage.getItem('auhEtaSession');
+                if (!user || !user.password || session !== user.password) {
                     location.replace('index.html');
                 }
-            } catch (e) { location.replace('index.html'); }
+            } catch (e) {
+                location.replace('index.html');
+            }
         })();
     </script>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script>
         tailwind.config = {
@@ -65,10 +60,8 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between font-sans antialiased p-3 sm:p-6">
     <div class="max-w-xl w-full mx-auto space-y-4 my-auto">
-        <!-- HEADER: FIXED BASE (AUH) + LIVE 24H CLOCKS -->
         <header class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg">
             <div class="flex items-center gap-2.5">
-                <!-- Tap this icon to go back to the Dashboard -->
                 <a href="index.html" title="Back to Dashboard" class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/40 hover:bg-cyan-500/25 flex items-center justify-center text-cyan-400">
                     <i class="ph-fill ph-squares-four text-lg"></i>
                 </a>
@@ -88,65 +81,34 @@
                 </div>
             </div>
         </header>
+
         <main class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4">
-            <!-- 1. DESTINATION COUNTRY OR AIRPORT CODE -->
             <div class="space-y-1.5 relative">
                 <div class="flex items-center justify-between">
-                    <label for="dest-input" class="text-xs font-mono uppercase text-slate-300 font-bold">
-                        1. Destination Country / Airport Code
-                    </label>
+                    <label for="dest-input" class="text-xs font-mono uppercase text-slate-300 font-bold">1. Destination Country / Airport Code</label>
                     <div class="flex items-center gap-1.5">
                         <button type="button" id="fav-btn" class="text-lg leading-none text-slate-500 hover:text-amber-300 transition" title="Pin to Dashboard favourites"><i class="ph ph-star"></i></button>
-                        <span id="dest-tz-pill" class="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
-                        COK • India (UTC+05:30)
-                    </span>
+                        <span id="dest-tz-pill" class="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">COK • India (UTC+05:30)</span>
                     </div>
                 </div>
                 <div class="relative">
-                    <input
-                        type="text"
-                        id="dest-input"
-                        value="COK"
-                        autocomplete="off"
-                        placeholder="Type IATA or Country Code (e.g. COK, ALA, ALY, BOM, LHR, IN, UK, KZ, EG)..."
-                        class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-3 font-mono text-base font-bold uppercase text-white placeholder:font-normal placeholder:text-slate-500 focus:outline-none transition"
-                    >
-                    <!-- Quick Dropdown List (Recent + Destinations) -->
+                    <input type="text" id="dest-input" value="COK" autocomplete="off" placeholder="Type IATA or Country Code..." class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-3 font-mono text-base font-bold uppercase text-white placeholder:font-normal placeholder:text-slate-500 focus:outline-none transition">
                     <div id="dest-dropdown" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto z-30 divide-y divide-slate-800"></div>
                 </div>
             </div>
-            <!-- 2 & 3: AIRBORNE TIME (24H) & EET (FLYING HOURS) SIDE BY SIDE -->
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <!-- AIRBORNE TIME BOX -->
                 <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
                     <div class="flex items-center justify-between">
-                        <label for="airborne-input" class="text-xs font-mono uppercase text-slate-300 font-bold">
-                            2. Airborne Time (24H)
-                        </label>
-                        <!-- Toggle AUH Local vs UTC -->
+                        <label for="airborne-input" class="text-xs font-mono uppercase text-slate-300 font-bold">2. Airborne Time (24H)</label>
                         <div class="inline-flex rounded-lg bg-slate-900 p-0.5 border border-slate-800 text-[10px] font-mono">
                             <button type="button" id="ab-mode-local" class="px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-bold">AUH LT</button>
                             <button type="button" id="ab-mode-utc" class="px-2 py-0.5 rounded-md text-slate-400 hover:text-white">UTC (Z)</button>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input
-                            type="text"
-                            id="airborne-input"
-                            value="14:30"
-                            maxlength="5"
-                            inputmode="numeric"
-                            placeholder="HH:MM or 1430"
-                            class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2.5 text-center font-mono text-2xl font-extrabold text-white focus:outline-none"
-                        >
-                        <button
-                            type="button"
-                            id="ab-now-btn"
-                            class="px-2.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-[11px] font-bold shrink-0 transition"
-                            title="Set Airborne Time to Right Now"
-                        >
-                            NOW
-                        </button>
+                        <input type="text" id="airborne-input" value="14:30" maxlength="5" inputmode="numeric" placeholder="HH:MM or 1430" class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2.5 text-center font-mono text-2xl font-extrabold text-white focus:outline-none">
+                        <button type="button" id="ab-now-btn" class="px-2.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-[11px] font-bold shrink-0 transition">NOW</button>
                     </div>
                     <div class="flex items-center gap-2">
                         <label for="date-input" class="text-[10px] font-mono text-slate-400 shrink-0">Flight date</label>
@@ -158,42 +120,30 @@
                         <span id="ab-converted-tag" class="text-amber-400 font-semibold">= 10:30Z (UTC)</span>
                     </div>
                 </div>
-                <!-- EET (ESTIMATED ELAPSED TIME / FLYING HOURS) BOX -->
+
                 <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
                     <div class="flex items-center justify-between">
-                        <label for="eet-input" class="text-xs font-mono uppercase text-slate-300 font-bold">
-                            3. EET (Flying Time)
-                        </label>
+                        <label for="eet-input" class="text-xs font-mono uppercase text-slate-300 font-bold">3. EET (Flying Time)</label>
                         <span class="text-[10px] font-mono text-emerald-400">HH:MM or 4-Digit</span>
                     </div>
                     <div class="flex items-center gap-1.5">
                         <button type="button" data-eet-step="-10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-xs font-bold shrink-0 transition">-10</button>
-                        <input
-                            type="text"
-                            id="eet-input"
-                            value="03:55"
-                            maxlength="5"
-                            inputmode="numeric"
-                            placeholder="03:55 or 0355"
-                            class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2 py-2.5 text-center font-mono text-2xl font-extrabold text-emerald-400 focus:outline-none"
-                        >
+                        <input type="text" id="eet-input" value="03:55" maxlength="5" inputmode="numeric" placeholder="03:55 or 0355" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2 py-2.5 text-center font-mono text-2xl font-extrabold text-emerald-400 focus:outline-none">
                         <button type="button" data-eet-step="10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-xs font-bold shrink-0 transition">+10</button>
                     </div>
                     <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
                         <span>Duration Enroute</span>
                         <span id="eet-total-mins" class="text-emerald-300 font-semibold">3h 55m (235m)</span>
                     </div>
-                    <!-- Previous flying times used for the selected destination -->
                     <div id="eet-history" class="hidden pt-2 border-t border-slate-800">
                         <div id="eet-history-title" class="text-[10px] font-mono text-slate-400 mb-1.5"></div>
                         <div id="eet-history-chips" class="flex flex-wrap gap-1.5"></div>
                     </div>
                 </div>
             </div>
-            <!-- DUAL OUTPUT CARDS: ARRIVAL LOCAL TIME & ARRIVAL UTC TIME -->
+
             <div class="pt-2 border-t border-slate-800 space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- OUTPUT 1: DESTINATION LOCAL ETA (24H) -->
                     <div class="bg-emerald-950/30 border-2 border-emerald-500/60 rounded-2xl p-4 flex flex-col justify-between">
                         <div class="flex items-center justify-between">
                             <span class="text-[11px] font-mono uppercase font-bold text-emerald-400">ETA DESTINATION (LOCAL)</span>
@@ -203,11 +153,9 @@
                             <span id="out-local-time" class="font-mono text-4xl sm:text-5xl font-extrabold text-white tracking-tight">19:55</span>
                             <span id="out-local-code" class="font-mono text-sm font-bold text-emerald-400">COK</span>
                         </div>
-                        <div id="out-local-meta" class="text-[11px] font-mono text-slate-300 truncate">
-                            India (UTC+05:30)
-                        </div>
+                        <div id="out-local-meta" class="text-[11px] font-mono text-slate-300 truncate">India (UTC+05:30)</div>
                     </div>
-                    <!-- OUTPUT 2: ZULU / UTC ETA (24H) -->
+
                     <div class="bg-amber-950/25 border-2 border-amber-500/50 rounded-2xl p-4 flex flex-col justify-between">
                         <div class="flex items-center justify-between">
                             <span class="text-[11px] font-mono uppercase font-bold text-amber-400">ETA ZULU (UTC)</span>
@@ -216,21 +164,13 @@
                         <div class="my-2 flex items-baseline gap-2">
                             <span id="out-utc-time" class="font-mono text-4xl sm:text-5xl font-extrabold text-amber-400 tracking-tight">14:25Z</span>
                         </div>
-                        <div id="out-auh-ref" class="text-[11px] font-mono text-cyan-300">
-                            AUH Base Time: 18:25 LT
-                        </div>
+                        <div id="out-auh-ref" class="text-[11px] font-mono text-cyan-300">AUH Base Time: 18:25 LT</div>
                     </div>
                 </div>
-                <!-- ONE-LINE SUMMARY & COPY BUTTON -->
+
                 <div class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2">
-                    <div id="summary-line" class="font-mono text-xs text-slate-300 truncate">
-                        DEP AUH 14:30 LT (10:30Z) • EET 03:55 • ETA COK 19:55 LT (14:25Z)
-                    </div>
-                    <button
-                        type="button"
-                        id="copy-btn"
-                        class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold shrink-0 flex items-center gap-1 transition active:scale-95"
-                    >
+                    <div id="summary-line" class="font-mono text-xs text-slate-300 truncate">DEP AUH 14:30 LT (10:30Z) • EET 03:55 • ETA COK 19:55 LT (14:25Z)</div>
+                    <button type="button" id="copy-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold shrink-0 flex items-center gap-1 transition active:scale-95">
                         <i class="ph-bold ph-copy"></i>
                         <span id="copy-btn-label">COPY</span>
                     </button>
@@ -238,6 +178,7 @@
             </div>
         </main>
     </div>
+
     <script>
 const AUH_OFFSET = 4.0;
 const DESTINATIONS = [
@@ -374,25 +315,21 @@ const fmtHM = m => { m = ((m % 1440) + 1440) % 1440; return `${pad(Math.floor(m 
 const lastDow = (y, mo, dow) => { const d = new Date(Date.UTC(y, mo + 1, 0)); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() - dow + 7) % 7)); return d; };
 const nthDow = (y, mo, dow, n) => { const d = new Date(Date.UTC(y, mo, 1)); d.setUTCDate(1 + ((dow - d.getUTCDay() + 7) % 7) + (n - 1) * 7); return d; };
 const at = (d, h) => d.getTime() + h * 3600000;
-
-// Effective UTC offset (hours) of a destination at a given UTC instant
 function offsetAt(dest, t) {
   const y = new Date(t).getUTCFullYear(), o = dest.offset;
   let on = false;
   switch (dest.dstRule) {
     case 'EU': on = t >= at(lastDow(y, 2, 0), 1) && t < at(lastDow(y, 9, 0), 1); break;
-    case 'EU_MIDDLE_EAST': on = t >= at(lastDow(y, 2, 0), -o) && t < at(lastDow(y, 9, 0), -o); break; // Lebanon: 00:00 local
-    case 'EGYPT': on = t >= at(lastDow(y, 3, 5), -o) && t < at(lastDow(y, 9, 4), 24 - (o + 1)); break; // last Fri Apr -> last Thu Oct (24:00)
+    case 'EU_MIDDLE_EAST': on = t >= at(lastDow(y, 2, 0), -o) && t < at(lastDow(y, 9, 0), -o); break;
+    case 'EGYPT': on = t >= at(lastDow(y, 3, 5), -o) && t < at(lastDow(y, 9, 4), 24 - (o + 1)); break;
     case 'US': on = t >= at(nthDow(y, 2, 0, 2), 2 - o) && t < at(nthDow(y, 10, 0, 1), 2 - (o + 1)); break;
-    case 'AU': on = t >= at(nthDow(y, 9, 0, 1), 2 - o) || t < at(nthDow(y, 3, 0, 1), 2 - o); break; // southern hemisphere
+    case 'AU': on = t >= at(nthDow(y, 9, 0, 1), 2 - o) || t < at(nthDow(y, 3, 0, 1), 2 - o); break;
   }
   return on ? o + 1 : o;
 }
 const dstNote = d => d.dstRule === 'NONE' ? '' : ' • DST rule auto';
-
 let abMode = 'local', current = DESTINATIONS[0], dateTouched = false;
-
-function parseHM(str, allowThree) {
+function parseHM(str) {
   const dg = String(str).replace(/\D/g, '');
   if (!dg) return null;
   let h, m;
@@ -403,28 +340,26 @@ function parseHM(str, allowThree) {
 }
 const parseAirborne = s => { const r = parseHM(s); return r && r.h < 24 ? r.h * 60 + r.m : null; };
 const parseEET = s => { const r = parseHM(s); return r ? r.h * 60 + r.m : null; };
-
 function findDest(q) {
   q = q.trim().toUpperCase(); if (!q) return null;
   return DESTINATIONS.find(d => d.code === q) || DESTINATIONS.find(d => d.countryCode === q) ||
     DESTINATIONS.find(d => d.code.startsWith(q) || d.name.toUpperCase().includes(q)) || null;
 }
-
 function calc() {
   renderEetHistory();
   renderFavBtn();
   const ab = parseAirborne($('airborne-input').value), eet = parseEET($('eet-input').value);
   if (ab == null || eet == null) return;
   const now = new Date();
-  const baseLocalDate = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) + (now.getUTCHours() + AUH_OFFSET >= 24 ? 86400000 : 0); // today's AUH date
+  const baseLocalDate = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) + (now.getUTCHours() + AUH_OFFSET >= 24 ? 86400000 : 0);
   const autoBase = abMode === 'local' ? baseLocalDate : Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   let baseDate = autoBase;
   const dv = $('date-input').value;
   if (dateTouched && /^\d{4}-\d{2}-\d{2}$/.test(dv)) {
     const [dy, dmo, dday] = dv.split('-').map(Number);
-    baseDate = Date.UTC(dy, dmo - 1, dday);           // date picked by the user (in AUH LT or UTC, matching the toggle)
+    baseDate = Date.UTC(dy, dmo - 1, dday);
   } else {
-    $('date-input').value = new Date(autoBase).toISOString().slice(0, 10);   // follow today automatically
+    $('date-input').value = new Date(autoBase).toISOString().slice(0, 10);
   }
   $('date-today-btn').classList.toggle('hidden', !dateTouched);
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -432,7 +367,6 @@ function calc() {
   const depUTC = abMode === 'local' ? baseDate + ab * 60000 - AUH_OFFSET * 3600000 : baseDate + ab * 60000;
   const arrUTC = depUTC + eet * 60000;
   const off = offsetAt(current, arrUTC);
-  const dayDiff = (t, o, ref) => Math.round((Math.floor((t + o * 3600000) / 86400000) - Math.floor((ref) / 86400000)));
   const depAuhDay = Math.floor((depUTC + AUH_OFFSET * 3600000) / 86400000);
   const localDay = Math.floor((arrUTC + off * 3600000) / 86400000) - depAuhDay;
   const utcDay = Math.floor(arrUTC / 86400000) - Math.floor(depUTC / 86400000);
@@ -451,11 +385,12 @@ function calc() {
   $('dest-tz-pill').textContent = `${current.code} • ${current.name.split(',').pop().trim().replace(/ \(.*\)/, '')} (${fmtOff(off)})`;
   $('summary-line').textContent = `DEP AUH ${hm(depUTC, AUH_OFFSET)} LT (${hm(depUTC, 0)}Z) • EET ${fmtHM(eet)} • ETA ${current.code} ${hm(arrUTC, off)} LT (${hm(arrUTC, 0)}Z)`;
 }
-
 function setMode(m) {
   abMode = m;
-  const on = 'px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-bold', off = 'px-2 py-0.5 rounded-md text-slate-400 hover:text-white';
-  $('ab-mode-local').className = m === 'local' ? on : off; $('ab-mode-utc').className = m === 'utc' ? on : off;
+  const on = 'px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-bold';
+  const off = 'px-2 py-0.5 rounded-md text-slate-400 hover:text-white';
+  $('ab-mode-local').className = m === 'local' ? on : off;
+  $('ab-mode-utc').className = m === 'utc' ? on : off;
   calc();
 }
 function tick() {
@@ -464,14 +399,9 @@ function tick() {
   $('live-auh-clock').textContent = hmNow(AUH_OFFSET);
 }
 const hmNow = o => { const d = new Date(Date.now() + o * 3600000); return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
-
-/* ---------- RECENT HISTORY (saved on this device, like Google Maps) ---------- */
-const HKEY = 'auhEtaRecent';   // same key is read by the Dashboard (index.html)
-const HMAX = 10;
+const HKEY = 'auhEtaRecent';
 const getRecent = () => { try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { return []; } };
 const setRecent = l => { try { localStorage.setItem(HKEY, JSON.stringify(l)); } catch (e) {} };
-
-/* ---------- FAVOURITE DESTINATIONS (shown on the Dashboard) ---------- */
 const FKEY = 'auhEtaFav';
 const getFav = () => { try { return JSON.parse(localStorage.getItem(FKEY) || '[]'); } catch (e) { return []; } };
 const setFav = l => { try { localStorage.setItem(FKEY, JSON.stringify(l)); } catch (e) {} };
@@ -486,19 +416,15 @@ $('fav-btn').addEventListener('click', () => {
   setFav(l.includes(current.code) ? l.filter(c => c !== current.code) : [current.code, ...l].slice(0, 8));
   renderFavBtn();
 });
-
-/* ---------- FLYING TIME HISTORY PER DESTINATION ---------- */
-const EKEY = 'auhEtaEET';      // { COK: ['03:55','04:05'], DXB: [...] } newest first
+const EKEY = 'auhEtaEET';
 const EMAX = 5;
 const getEetMap = () => { try { return JSON.parse(localStorage.getItem(EKEY) || '{}'); } catch (e) { return {}; } };
 const setEetMap = m => { try { localStorage.setItem(EKEY, JSON.stringify(m)); } catch (e) {} };
-
 function saveEet(code, eetStr) {
   const m = getEetMap();
   m[code] = [eetStr, ...(m[code] || []).filter(x => x !== eetStr)].slice(0, EMAX);
   setEetMap(m);
 }
-
 function renderEetHistory() {
   const list = getEetMap()[current.code] || [];
   const box = $('eet-history'), chips = $('eet-history-chips');
@@ -516,35 +442,30 @@ function renderEetHistory() {
     chips.appendChild(b);
   });
 }
-
 function saveRecent() {
   const ab = parseAirborne($('airborne-input').value), eet = parseEET($('eet-input').value);
   if (ab == null || eet == null) return;
   const s = { dest: current.code, ab: fmtHM(ab), mode: abMode, eet: fmtHM(eet), ts: Date.now() };
   const rest = getRecent().filter(r => !(r.dest === s.dest && r.ab === s.ab && r.mode === s.mode && r.eet === s.eet));
-  setRecent([s, ...rest].slice(0, HMAX));
+  setRecent([s, ...rest].slice(0, 10));
   saveEet(s.dest, s.eet);
   renderEetHistory();
 }
 let saveTimer;
 const queueSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveRecent, 1500); };
-
 function applyRecent(r) {
   const d = DESTINATIONS.find(x => x.code === r.dest); if (!d) return;
   current = d; di.value = d.code; dateTouched = false;
   $('airborne-input').value = r.ab; $('eet-input').value = r.eet;
   setMode(r.mode);
 }
-
 const dd = $('dest-dropdown'), di = $('dest-input');
-// Fill EET with the last flying time used for this destination (if any)
 function autoFillEet(code) {
   const last = (getEetMap()[code] || [])[0];
   if (last) $('eet-input').value = last;
 }
 let destAtFocus = current.code;
-let typed = false; // false = show Recent + all destinations; true = filter by what was typed
-
+let typed = false;
 function sectionHead(text, withClear) {
   const h = document.createElement('div');
   h.className = 'flex items-center justify-between px-3 py-1.5 bg-slate-950 font-mono text-[10px] text-slate-400';
@@ -557,7 +478,6 @@ function sectionHead(text, withClear) {
   }
   return h;
 }
-
 function showList() {
   const q = typed ? di.value.trim().toUpperCase() : '';
   const list = DESTINATIONS.filter(d => !q || d.code.startsWith(q) || d.countryCode === q || d.name.toUpperCase().includes(q)).slice(0, 40);
@@ -567,7 +487,6 @@ function showList() {
     return r.dest.startsWith(q) || (d && d.countryCode === q);
   }).slice(0, q ? 3 : 6);
   dd.innerHTML = '';
-
   if (recents.length) {
     dd.appendChild(sectionHead('Recent', !q));
     recents.forEach(r => {
@@ -575,22 +494,16 @@ function showList() {
       row.className = 'flex items-center hover:bg-slate-800';
       const pick = document.createElement('button'); pick.type = 'button';
       pick.className = 'flex-1 min-w-0 flex items-center gap-2 text-left px-3 py-2 font-mono text-xs text-slate-200';
-      pick.innerHTML = `<i class="ph ph-clock-counter-clockwise text-base text-slate-500"></i>` +
-        `<span class="font-bold text-emerald-300">${r.dest}</span>` +
-        `<span class="text-slate-400 truncate">${r.ab} ${r.mode === 'local' ? 'LT' : 'Z'} • EET ${r.eet}</span>`;
+      pick.innerHTML = `<i class="ph ph-clock-counter-clockwise text-base text-slate-500"></i><span class="font-bold text-emerald-300">${r.dest}</span><span class="text-slate-400 truncate">${r.ab} ${r.mode === 'local' ? 'LT' : 'Z'} • EET ${r.eet}</span>`;
       pick.addEventListener('mousedown', e => { e.preventDefault(); applyRecent(r); dd.classList.add('hidden'); queueSave(); });
       const del = document.createElement('button'); del.type = 'button'; del.title = 'Remove';
       del.className = 'px-3 py-2 text-slate-500 hover:text-white';
       del.innerHTML = '<i class="ph-bold ph-x"></i>';
-      del.addEventListener('mousedown', e => {
-        e.preventDefault(); e.stopPropagation();
-        setRecent(getRecent().filter(x => x.ts !== r.ts)); showList();
-      });
+      del.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); setRecent(getRecent().filter(x => x.ts !== r.ts)); showList(); });
       row.appendChild(pick); row.appendChild(del); dd.appendChild(row);
     });
     if (list.length) dd.appendChild(sectionHead('Destinations', false));
   }
-
   list.forEach(d => {
     const b = document.createElement('button'); b.type = 'button';
     b.className = 'w-full text-left px-3 py-2 hover:bg-slate-800 font-mono text-xs text-slate-200';
@@ -604,9 +517,8 @@ di.addEventListener('input', () => { typed = true; const f = findDest(di.value);
 di.addEventListener('focus', () => { typed = false; destAtFocus = current.code; di.select(); showList(); });
 di.addEventListener('blur', () => {
   dd.classList.add('hidden'); di.value = current.code;
-  if (current.code !== destAtFocus) { destAtFocus = current.code; autoFillEet(current.code); calc(); }   // typed a new destination
+  if (current.code !== destAtFocus) { destAtFocus = current.code; autoFillEet(current.code); calc(); }
 });
-
 ['airborne-input', 'eet-input'].forEach(id => {
   const el = $(id);
   el.addEventListener('input', () => { calc(); queueSave(); });
@@ -629,22 +541,18 @@ $('copy-btn').addEventListener('click', async () => {
   $('copy-btn-label').textContent = 'COPIED'; setTimeout(() => $('copy-btn-label').textContent = 'COPY', 1200);
 });
 tick(); setInterval(tick, 1000); calc();
-
-// Opened from a Dashboard "Recent" item (calculator.html?recent=2)
 (() => {
   const q = new URLSearchParams(location.search), i = q.get('recent'), dc = q.get('dest');
   if (i !== null) { const r = getRecent()[+i]; if (r) applyRecent(r); }
-  else if (dc) {                                   // opened from a Dashboard favourite (calculator.html?dest=COK)
+  else if (dc) {
     const d = DESTINATIONS.find(x => x.code === dc.toUpperCase());
     if (d) { current = d; di.value = d.code; autoFillEet(d.code); calc(); }
   }
 })();
-
     </script>
     <script>
-        // Keep the old ETA calculator working on GitHub Pages without stale service worker issues.
         if ("serviceWorker" in navigator) {
-            // Service worker registration is intentionally disabled until the Pages cache issue is fixed.
+            // Service worker intentionally disabled to avoid stale cache loops.
         }
     </script>
 </body>
