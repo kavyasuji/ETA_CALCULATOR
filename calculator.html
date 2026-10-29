@@ -20,7 +20,10 @@
             try {
                 var u = JSON.parse(localStorage.getItem('auhEtaUser') || 'null');
                 var t = localStorage.getItem('auhEtaSession') || sessionStorage.getItem('auhEtaSession');
-                if (!u || t !== u.hash) location.replace('index.html');
+                var expected = u && (u.hash || u.password || '');
+                if (!u || !expected || (t !== expected && t !== u.hash && t !== u.password)) {
+                    location.replace('index.html');
+                }
             } catch (e) { location.replace('index.html'); }
         })();
     </script>
@@ -106,7 +109,7 @@
                         value="COK"
                         autocomplete="off"
                         placeholder="Type IATA or Country Code (e.g. COK, ALA, ALY, BOM, LHR, IN, UK, KZ, EG)..."
-                        class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-3 font-mono text-base font-bold uppercase text-white placeholder:font-normal placeholder:text-slate-500 focus:outline-none"
+                        class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3.5 py-3 font-mono text-base font-bold uppercase text-white placeholder:font-normal placeholder:text-slate-500 focus:outline-none transition"
                     >
                     <!-- Quick Dropdown List (Recent + Destinations) -->
                     <div id="dest-dropdown" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto z-30 divide-y divide-slate-800"></div>
@@ -147,8 +150,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <label for="date-input" class="text-[10px] font-mono text-slate-400 shrink-0">Flight date</label>
-                        <input type="date" id="date-input" style="color-scheme: dark"
-                            class="flex-1 min-w-0 bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-lg px-2 py-1 font-mono text-xs text-white focus:outline-none">
+                        <input type="date" id="date-input" style="color-scheme: dark" class="flex-1 min-w-0 bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-lg px-2 py-1 font-mono text-xs text-white focus:outline-none">
                         <button type="button" id="date-today-btn" class="hidden px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-[10px] font-bold shrink-0">TODAY</button>
                     </div>
                     <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
@@ -165,7 +167,7 @@
                         <span class="text-[10px] font-mono text-emerald-400">HH:MM or 4-Digit</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <button type="button" data-eet-step="-10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-[10px] font-bold">−10</button>
+                        <button type="button" data-eet-step="-10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-xs font-bold shrink-0 transition">-10</button>
                         <input
                             type="text"
                             id="eet-input"
@@ -175,7 +177,7 @@
                             placeholder="03:55 or 0355"
                             class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-2 py-2.5 text-center font-mono text-2xl font-extrabold text-emerald-400 focus:outline-none"
                         >
-                        <button type="button" data-eet-step="10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-[10px] font-bold">+10</button>
+                        <button type="button" data-eet-step="10" class="eet-step-btn px-2.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-xs font-bold shrink-0 transition">+10</button>
                     </div>
                     <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
                         <span>Duration Enroute</span>
@@ -640,8 +642,9 @@ tick(); setInterval(tick, 1000); calc();
 
     </script>
     <script>
+        // Keep the old ETA calculator working on GitHub Pages without stale service worker issues.
         if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+            // Service worker registration is intentionally disabled until the Pages cache issue is fixed.
         }
     </script>
 </body>
