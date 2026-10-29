@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AUH ETA Dashboard</title>
+    <meta name="theme-color" content="#0b1120" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
@@ -288,7 +292,6 @@
             const tempMax = Math.round(daily.temperature_2m_max[offset]);
             const iconEl = document.getElementById(`forecast-day-${index + 1}-icon`);
             const tempEl = document.getElementById(`forecast-day-${index + 1}-temp`);
-            const dayLabel = document.querySelectorAll('#forecast-day-1-icon, #forecast-day-2-icon, #forecast-day-3-icon');
             const targetInfo = weatherCodeMap[dayCode] || { icon: '☀️', label: 'Clear' };
 
             if (iconEl) iconEl.textContent = targetInfo.icon;
@@ -314,6 +317,14 @@
       loadWeather();
       setInterval(updateClock, 1000);
       setInterval(loadWeather, 1800000);
+    </script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(console.error);
+        });
+      }
     </script>
   </body>
 </html>
