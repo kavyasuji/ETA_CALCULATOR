@@ -1,4 +1,4 @@
-const CACHE = "auh-eta-v2";
+const CACHE = "auh-eta-v3";
 const CORE = [
   "./",
   "./index.html",
