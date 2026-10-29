@@ -206,8 +206,9 @@
       function ensureSession() {
         const user = readJson('auhEtaUser', null);
         const session = localStorage.getItem('auhEtaSession');
+        const expectedHash = user && (user.hash || user.password);
 
-        if (!user || !user.password || session !== user.password) {
+        if (!user || !user.password || (session !== user.password && session !== expectedHash)) {
           window.location.href = 'index.html';
           return null;
         }
