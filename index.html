@@ -117,10 +117,20 @@
     </div>
 
     <script>
+      const userKey = 'auhEtaUser';
+      const sessionKey = 'auhEtaSession';
       const loginForm = document.getElementById('login-form');
       const demoBtn = document.getElementById('demo-btn');
       const loginError = document.getElementById('login-error');
       const clearSessionBtn = document.getElementById('clear-session');
+
+      function readUser() {
+        try {
+          return JSON.parse(localStorage.getItem(userKey) || 'null');
+        } catch (error) {
+          return null;
+        }
+      }
 
       function showError(message) {
         loginError.textContent = message;
@@ -133,13 +143,9 @@
       }
 
       function setSession(user) {
-        const normalizedUser = {
-          ...user,
-          password: user.password,
-          hash: user.password || user.hash || ''
-        };
-        localStorage.setItem('auhEtaUser', JSON.stringify(normalizedUser));
-        localStorage.setItem('auhEtaSession', normalizedUser.hash);
+        const normalizedUser = { name: user.name, role: user.role, password: user.password };
+        localStorage.setItem(userKey, JSON.stringify(normalizedUser));
+        localStorage.setItem(sessionKey, user.password);
       }
 
       function completeLogin(name, role, password) {
@@ -148,8 +154,7 @@
           return;
         }
 
-        const user = { name, role, password };
-        setSession(user);
+        setSession({ name, role, password });
         window.location.href = 'dashboard.html';
       }
 
@@ -167,12 +172,14 @@
       });
 
       clearSessionBtn.addEventListener('click', function () {
-        localStorage.removeItem('auhEtaUser');
-        localStorage.removeItem('auhEtaSession');
+        localStorage.removeItem(userKey);
+        localStorage.removeItem(sessionKey);
         window.location.reload();
       });
 
-      if (localStorage.getItem('auhEtaSession')) {
+      const user = readUser();
+      const session = localStorage.getItem(sessionKey);
+      if (user && user.password && session === user.password) {
         window.location.href = 'dashboard.html';
       }
     </script>
