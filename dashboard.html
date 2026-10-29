@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AUH ETA Dashboard</title>
+    <title>ETA Dashboard</title>
     <meta name="theme-color" content="#0b1120" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./icons/icon-192.png" />
@@ -11,318 +11,224 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
-        background: radial-gradient(circle at top, rgba(34, 211, 238, 0.16), transparent 30%),
-          linear-gradient(135deg, #020817 0%, #0f172a 50%, #020617 100%);
+        background: radial-gradient(circle at top, #111827 0%, #020817 55%, #020617 100%);
       }
       .glass {
         background: rgba(15, 23, 42, 0.8);
         backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-      }
-      .digital-clock {
-        font-family: "JetBrains Mono", "SFMono-Regular", monospace;
-        letter-spacing: 0.08em;
       }
     </style>
   </head>
   <body class="min-h-screen text-slate-100 font-sans antialiased">
-    <div class="max-w-7xl mx-auto px-4 py-8 md:px-8">
-      <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="max-w-5xl mx-auto px-4 py-10">
+      <header class="flex items-center justify-between gap-4 mb-8">
         <div>
-          <p class="font-mono text-[10px] uppercase tracking-[0.35em] text-cyan-300">AUH</p>
-          <h1 class="mt-2 text-3xl font-bold">ETA Dashboard</h1>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <div class="rounded-2xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-300">
-            <span class="text-slate-500">Signed in as</span>
-            <span id="user-name" class="font-semibold text-white">Demo User</span>
-          </div>
-
-          <div class="rounded-2xl border border-cyan-500/30 bg-slate-900/90 px-3 py-2 shadow-lg shadow-cyan-900/20">
-            <div class="text-[10px] uppercase tracking-[0.22em] text-slate-400">Local Time</div>
-            <div id="digital-clock" class="digital-clock mt-1 text-lg font-bold text-cyan-300">00:00:00</div>
-          </div>
-
-          <button id="signout-btn" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-200 hover:border-slate-500">
-            Sign Out
-          </button>
+          <p class="font-mono text-xs uppercase tracking-[0.25em] text-cyan-300">AUH</p>
+          <h1 class="text-3xl font-bold">ETA Dashboard</h1>
         </div>
       </header>
 
-      <main class="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
-        <section class="space-y-6">
-          <div class="grid gap-4 md:grid-cols-3">
-            <div class="glass border border-slate-800 rounded-2xl p-4">
-              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Flights</div>
-              <div id="flights-count" class="mt-2 text-3xl font-extrabold font-mono text-cyan-300">12</div>
+      <main class="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+        <section class="glass border border-slate-800 rounded-3xl p-6 shadow-2xl">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-300">Access</p>
+              <h2 class="text-2xl font-bold">Welcome back</h2>
             </div>
-            <div class="glass border border-slate-800 rounded-2xl p-4">
-              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Recent</div>
-              <div id="recent-count" class="mt-2 text-3xl font-extrabold font-mono text-emerald-300">0</div>
-            </div>
-            <div class="glass border border-slate-800 rounded-2xl p-4">
-              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Favourites</div>
-              <div id="fav-count" class="mt-2 text-3xl font-extrabold font-mono text-amber-300">0</div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center">
+              <span>✓</span>
             </div>
           </div>
 
-          <div class="glass border border-slate-800 rounded-3xl p-5">
-            <div class="mb-4 flex items-center justify-between">
-              <div>
-                <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-emerald-300">Tools</p>
-                <h2 class="text-2xl font-bold">Operations</h2>
-              </div>
-              <span class="text-cyan-300">→</span>
+          <form id="login-form" class="space-y-4" novalidate>
+            <div>
+              <label for="name-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Name</label>
+              <input id="name-input" type="text" placeholder="e.g. Ali Raza" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" />
             </div>
 
-            <div class="grid gap-3 md:grid-cols-2">
-              <a href="calculator.html" class="block rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm font-medium text-slate-100 hover:border-cyan-400 hover:bg-slate-900 transition">
-                Open ETA Calculator
-              </a>
-              <a href="index.html" class="block rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm font-medium text-slate-100 hover:border-emerald-400 hover:bg-slate-900 transition">
-                Back to Sign In
-              </a>
-            </div>
-          </div>
-
-          <div class="glass border border-slate-800 rounded-3xl p-5">
-            <div class="mb-4 flex items-center justify-between">
-              <div>
-                <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-300">Board</p>
-                <h2 class="text-xl font-bold">Live Flight Status</h2>
-              </div>
-              <span class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                Active
-              </span>
+            <div>
+              <label for="role-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Role</label>
+              <select id="role-input" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none">
+                <option value="Ops Controller">Ops Controller</option>
+                <option value="Aircraft Dispatcher">Aircraft Dispatcher</option>
+                <option value="Ramp Controller">Ramp Controller</option>
+                <option value="Load Control">Load Control</option>
+                <option value="Station Coordinator">Station Coordinator</option>
+                <option value="Duty Manager">Duty Manager</option>
+                <option value="Supervisor">Supervisor</option>
+              </select>
             </div>
 
-            <div class="space-y-3">
-              <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3">
-                <div>
-                  <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Flight</p>
-                  <p class="mt-1 font-mono text-lg font-bold text-white">ETD-214</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-xs uppercase tracking-[0.2em] text-slate-400">ETA</p>
-                  <p class="mt-1 font-mono text-lg font-bold text-emerald-300">19:55 LT</p>
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3">
-                <div>
-                  <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Route</p>
-                  <p class="mt-1 font-mono text-lg font-bold text-white">AUH → COK</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-xs uppercase tracking-[0.2em] text-slate-400">EET</p>
-                  <p class="mt-1 font-mono text-lg font-bold text-amber-300">03:55</p>
-                </div>
-              </div>
+            <div>
+              <label for="password-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Password</label>
+              <input id="password-input" type="password" placeholder="Enter your password" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" />
             </div>
+
+            <p id="login-error" class="hidden rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"></p>
+
+            <button type="submit" class="w-full rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 transition shadow-lg shadow-cyan-500/20">
+              Sign In
+            </button>
+          </form>
+
+          <div class="mt-6 pt-4 border-t border-slate-800 text-sm text-slate-400">
+            Demo quick access:
+            <button id="demo-btn" class="text-cyan-300 hover:text-cyan-200 font-semibold">Continue as Demo User</button>
           </div>
         </section>
 
-        <aside class="space-y-6">
-          <div class="glass border border-slate-800 rounded-3xl p-5">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-amber-300">Weather</p>
-                <h2 class="text-xl font-bold">AUH Updates</h2>
-              </div>
-              <div id="weather-icon" class="text-3xl">☀️</div>
-            </div>
+        <section class="glass border border-slate-800 rounded-3xl p-6 shadow-2xl">
+          <div class="mb-6">
+            <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-emerald-300">Overview</p>
+            <h2 class="text-2xl font-bold">Operations Dashboard</h2>
+          </div>
 
-            <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-              <div class="flex items-end justify-between gap-3">
-                <div>
-                  <div class="text-xs uppercase tracking-[0.2em] text-amber-200">Now</div>
-                  <div id="weather-temp" class="mt-2 text-4xl font-extrabold text-white">--°C</div>
-                </div>
-                <div class="text-right text-sm text-amber-100">
-                  <div id="weather-condition">Loading...</div>
-                  <div id="weather-wind" class="mt-1">Wind -- kt</div>
-                </div>
-              </div>
+          <div class="grid gap-4 sm:grid-cols-3 mb-6">
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Flights</div>
+              <div class="mt-2 text-3xl font-extrabold font-mono text-cyan-300">12</div>
             </div>
-
-            <div class="mt-4 grid grid-cols-3 gap-3 text-center">
-              <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
-                <div id="forecast-day-1-icon" class="text-2xl">☀️</div>
-                <div class="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">Mon</div>
-                <div id="forecast-day-1-temp" class="mt-1 font-bold text-white">--°</div>
-              </div>
-              <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
-                <div id="forecast-day-2-icon" class="text-2xl">☀️</div>
-                <div class="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">Tue</div>
-                <div id="forecast-day-2-temp" class="mt-1 font-bold text-white">--°</div>
-              </div>
-              <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
-                <div id="forecast-day-3-icon" class="text-2xl">☀️</div>
-                <div class="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">Wed</div>
-                <div id="forecast-day-3-temp" class="mt-1 font-bold text-white">--°</div>
-              </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Recent</div>
+              <div class="mt-2 text-3xl font-extrabold font-mono text-emerald-300">0</div>
             </div>
-
-            <div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-sm text-slate-300">
-              <div class="flex items-center justify-between">
-                <span>Visibility</span>
-                <span id="weather-visibility" class="font-semibold text-white">-- km</span>
-              </div>
-              <div class="mt-2 flex items-center justify-between">
-                <span>Humidity</span>
-                <span id="weather-humidity" class="font-semibold text-white">--%</span>
-              </div>
-              <div class="mt-2 flex items-center justify-between">
-                <span>Next update</span>
-                <span id="weather-clock" class="font-semibold text-cyan-300">--:--</span>
-              </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Favourites</div>
+              <div class="mt-2 text-3xl font-extrabold font-mono text-amber-300">0</div>
             </div>
           </div>
 
-          <div class="glass border border-slate-800 rounded-3xl p-5">
-            <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-emerald-300">Notes</p>
-            <h3 class="mt-2 text-xl font-bold">Ops Brief</h3>
-            <ul class="mt-4 space-y-2 text-sm text-slate-300">
-              <li class="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2">Runway conditions normal.</li>
-              <li class="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2">No major delays reported at AUH.</li>
-              <li class="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2">Monitor overnight crosswind changes.</li>
-            </ul>
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-lg">Open ETA tools</h3>
+              <span class="text-cyan-300">→</span>
+            </div>
+            <div class="space-y-2">
+              <a href="calculator.html" class="block rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 hover:border-cyan-400 transition">
+                Open calculator
+              </a>
+              <button type="button" id="clear-session" class="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-left hover:border-rose-400 transition">
+                Clear session
+              </button>
+            </div>
           </div>
-        </aside>
+        </section>
       </main>
     </div>
 
     <script>
       const userKey = 'auhEtaUser';
       const sessionKey = 'auhEtaSession';
+      const loginForm = document.getElementById('login-form');
+      const demoBtn = document.getElementById('demo-btn');
+      const loginError = document.getElementById('login-error');
+      const clearSessionBtn = document.getElementById('clear-session');
 
-      function readJson(key, fallback) {
-        try {
-          const stored = localStorage.getItem(key);
-          return stored ? JSON.parse(stored) : fallback;
-        } catch (error) {
-          return fallback;
-        }
+      function getUserPassword(user) {
+        if (!user) return '';
+        return String(user.password ?? user.pin ?? '').trim();
       }
 
-      function ensureSession() {
-        const user = readJson(userKey, null);
-        const session = localStorage.getItem(sessionKey);
-
-        if (!user || !user.password || session !== user.password) {
-          localStorage.removeItem(userKey);
-          localStorage.removeItem(sessionKey);
-          window.location.href = 'index.html';
-          return null;
-        }
-
-        return user;
-      }
-
-      const user = ensureSession();
-      if (user) {
-        document.getElementById('user-name').textContent = user.name;
-      }
-
-      const recent = readJson('auhEtaRecent', []);
-      const favourites = readJson('auhEtaFav', []);
-      document.getElementById('recent-count').textContent = String(recent.length);
-      document.getElementById('fav-count').textContent = String(favourites.length);
-
-      function updateClock() {
-        const now = new Date();
-        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        document.getElementById('digital-clock').textContent = time;
-        document.getElementById('weather-clock').textContent = time;
-      }
-
-      const weatherCodeMap = {
-        0: { icon: '☀️', label: 'Clear sky' },
-        1: { icon: '🌤️', label: 'Mainly clear' },
-        2: { icon: '⛅', label: 'Partly cloudy' },
-        3: { icon: '☁️', label: 'Overcast' },
-        45: { icon: '🌫️', label: 'Fog' },
-        48: { icon: '🌫️', label: 'Depositing rime fog' },
-        51: { icon: '🌦️', label: 'Light drizzle' },
-        53: { icon: '🌦️', label: 'Moderate drizzle' },
-        55: { icon: '🌧️', label: 'Dense drizzle' },
-        56: { icon: '🌧️', label: 'Freezing drizzle' },
-        57: { icon: '🌧️', label: 'Heavy freezing drizzle' },
-        61: { icon: '🌦️', label: 'Slight rain' },
-        63: { icon: '🌧️', label: 'Moderate rain' },
-        65: { icon: '🌧️', label: 'Heavy rain' },
-        66: { icon: '🌧️', label: 'Freezing rain' },
-        67: { icon: '🌧️', label: 'Heavy freezing rain' },
-        71: { icon: '❄️', label: 'Slight snow' },
-        73: { icon: '❄️', label: 'Moderate snow' },
-        75: { icon: '❄️', label: 'Heavy snow' },
-        77: { icon: '❄️', label: 'Snow grains' },
-        80: { icon: '🌦️', label: 'Rain showers' },
-        81: { icon: '🌧️', label: 'Heavy rain showers' },
-        82: { icon: '⛈️', label: 'Violent rain showers' },
-        85: { icon: '❄️', label: 'Snow showers' },
-        86: { icon: '❄️', label: 'Heavy snow showers' },
-        95: { icon: '⛈️', label: 'Thunderstorm' },
-        96: { icon: '⛈️', label: 'Thunderstorm with hail' },
-        99: { icon: '⛈️', label: 'Heavy thunderstorm with hail' }
-      };
-
-      async function loadWeather() {
-        const url = 'https://api.open-meteo.com/v1/forecast?latitude=24.4333&longitude=54.6481&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max&timezone=auto';
-
-        try {
-          const response = await fetch(url);
-          if (!response.ok) throw new Error('Weather fetch failed');
-
-          const data = await response.json();
-          const current = data.current;
-          const daily = data.daily;
-
-          const temp = Math.round(current.temperature_2m);
-          const humidity = current.relative_humidity_2m;
-          const wind = Math.round(current.wind_speed_10m * 0.539957);
-          const code = current.weather_code;
-          const info = weatherCodeMap[code] || { icon: '☀️', label: 'Clear' };
-
-          document.getElementById('weather-temp').textContent = `${temp}°C`;
-          document.getElementById('weather-wind').textContent = `Wind ${wind} kt`;
-          document.getElementById('weather-condition').textContent = info.label;
-          document.getElementById('weather-icon').textContent = info.icon;
-          document.getElementById('weather-humidity').textContent = `${humidity}%`;
-          document.getElementById('weather-visibility').textContent = '10 km';
-
-          const forecastDays = [0, 1, 2];
-          forecastDays.forEach((offset, index) => {
-            const dayCode = daily.weather_code[offset];
-            const tempMax = Math.round(daily.temperature_2m_max[offset]);
-            const iconEl = document.getElementById(`forecast-day-${index + 1}-icon`);
-            const tempEl = document.getElementById(`forecast-day-${index + 1}-temp`);
-            const targetInfo = weatherCodeMap[dayCode] || { icon: '☀️', label: 'Clear' };
-
-            if (iconEl) iconEl.textContent = targetInfo.icon;
-            if (tempEl) tempEl.textContent = `${tempMax}°`;
-          });
-        } catch (error) {
-          document.getElementById('weather-temp').textContent = '31°C';
-          document.getElementById('weather-condition').textContent = 'Sunny';
-          document.getElementById('weather-wind').textContent = 'Wind 12 kt';
-          document.getElementById('weather-humidity').textContent = '42%';
-          document.getElementById('weather-visibility').textContent = '10 km';
-          document.getElementById('weather-icon').textContent = '☀️';
-        }
-      }
-
-      document.getElementById('signout-btn').addEventListener('click', function () {
+      function clearSession() {
         localStorage.removeItem(userKey);
         localStorage.removeItem(sessionKey);
-        window.location.href = 'index.html';
+      }
+
+      function readUser() {
+        try {
+          const raw = localStorage.getItem(userKey);
+          if (!raw) return null;
+          const user = JSON.parse(raw);
+          if (!user || !user.name || !getUserPassword(user)) return null;
+          return { ...user, password: getUserPassword(user) };
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function showError(message) {
+        loginError.textContent = message;
+        loginError.classList.remove('hidden');
+      }
+
+      function hideError() {
+        loginError.textContent = '';
+        loginError.classList.add('hidden');
+      }
+
+      function saveSession(user) {
+        const normalized = {
+          name: String(user.name || '').trim(),
+          role: String(user.role || '').trim(),
+          password: String(getUserPassword(user) || user.password || '').trim()
+        };
+
+        if (!normalized.name || !normalized.password) {
+          return false;
+        }
+
+        localStorage.setItem(userKey, JSON.stringify(normalized));
+        localStorage.setItem(sessionKey, normalized.password);
+        return true;
+      }
+
+      function redirectToDashboard() {
+        window.location.replace('dashboard.html');
+      }
+
+      function completeLogin(name, role, password) {
+        if (!name || !password) {
+          showError('Please enter your name and password.');
+          return;
+        }
+
+        const saved = saveSession({ name, role, password });
+        if (!saved) {
+          showError('Login failed. Please try again.');
+          return;
+        }
+
+        redirectToDashboard();
+      }
+
+      function validateExistingSession() {
+        const user = readUser();
+        const session = localStorage.getItem(sessionKey);
+        const password = getUserPassword(user);
+
+        if (user && password && session === password) {
+          redirectToDashboard();
+          return true;
+        }
+
+        if (user || session) {
+          clearSession();
+        }
+
+        return false;
+      }
+
+      loginForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        hideError();
+
+        const name = document.getElementById('name-input').value.trim();
+        const role = document.getElementById('role-input').value;
+        const password = document.getElementById('password-input').value.trim();
+
+        completeLogin(name, role, password);
       });
 
-      updateClock();
-      loadWeather();
-      setInterval(updateClock, 1000);
-      setInterval(loadWeather, 1800000);
+      demoBtn.addEventListener('click', function () {
+        completeLogin('Demo User', 'Aircraft Dispatcher', 'demo');
+      });
+
+      clearSessionBtn.addEventListener('click', function () {
+        clearSession();
+        window.location.reload();
+      });
+
+      validateExistingSession();
     </script>
   </body>
 </html>

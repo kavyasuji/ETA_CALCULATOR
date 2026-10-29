@@ -194,19 +194,31 @@
     </div>
 
     <script>
+      const userKey = 'auhEtaUser';
+      const sessionKey = 'auhEtaSession';
+
       function readJson(key, fallback) {
         try {
-          return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+          const stored = localStorage.getItem(key);
+          return stored ? JSON.parse(stored) : fallback;
         } catch (error) {
           return fallback;
         }
       }
 
-      function ensureSession() {
-        const user = readJson('auhEtaUser', null);
-        const session = localStorage.getItem('auhEtaSession');
+      function getUserPassword(user) {
+        if (!user) return '';
+        return String(user.password ?? user.pin ?? '').trim();
+      }
 
-        if (!user || !user.pin || session !== user.pin) {
+      function ensureSession() {
+        const user = readJson(userKey, null);
+        const session = localStorage.getItem(sessionKey);
+        const password = getUserPassword(user);
+
+        if (!user || !password || session !== password) {
+          localStorage.removeItem(userKey);
+          localStorage.removeItem(sessionKey);
           window.location.href = 'index.html';
           return null;
         }
@@ -308,8 +320,8 @@
       }
 
       document.getElementById('signout-btn').addEventListener('click', function () {
-        localStorage.removeItem('auhEtaUser');
-        localStorage.removeItem('auhEtaSession');
+        localStorage.removeItem(userKey);
+        localStorage.removeItem(sessionKey);
         window.location.href = 'index.html';
       });
 
@@ -317,14 +329,6 @@
       loadWeather();
       setInterval(updateClock, 1000);
       setInterval(loadWeather, 1800000);
-    </script>
-
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js?v=3").catch(console.error);
-        });
-      }
     </script>
   </body>
 </html>
