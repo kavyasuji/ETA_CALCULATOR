@@ -194,6 +194,9 @@
     </div>
 
     <script>
+      const userKey = 'auhEtaUser';
+      const sessionKey = 'auhEtaSession';
+
       function readJson(key, fallback) {
         try {
           const stored = localStorage.getItem(key);
@@ -204,11 +207,12 @@
       }
 
       function ensureSession() {
-        const user = readJson('auhEtaUser', null);
-        const session = localStorage.getItem('auhEtaSession');
-        const expectedHash = user && (user.hash || user.password);
+        const user = readJson(userKey, null);
+        const session = localStorage.getItem(sessionKey);
 
-        if (!user || !user.password || (session !== user.password && session !== expectedHash)) {
+        if (!user || !user.password || session !== user.password) {
+          localStorage.removeItem(userKey);
+          localStorage.removeItem(sessionKey);
           window.location.href = 'index.html';
           return null;
         }
@@ -310,8 +314,8 @@
       }
 
       document.getElementById('signout-btn').addEventListener('click', function () {
-        localStorage.removeItem('auhEtaUser');
-        localStorage.removeItem('auhEtaSession');
+        localStorage.removeItem(userKey);
+        localStorage.removeItem(sessionKey);
         window.location.href = 'index.html';
       });
 
