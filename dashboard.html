@@ -196,7 +196,8 @@
     <script>
       function readJson(key, fallback) {
         try {
-          return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+          const stored = localStorage.getItem(key);
+          return stored ? JSON.parse(stored) : fallback;
         } catch (error) {
           return fallback;
         }
@@ -206,7 +207,7 @@
         const user = readJson('auhEtaUser', null);
         const session = localStorage.getItem('auhEtaSession');
 
-        if (!user || !user.pin || session !== user.pin) {
+        if (!user || !user.password || session !== user.password) {
           window.location.href = 'index.html';
           return null;
         }

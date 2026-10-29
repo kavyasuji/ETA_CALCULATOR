@@ -40,10 +40,10 @@
             </div>
           </div>
 
-          <form id="login-form" class="space-y-4">
+          <form id="login-form" class="space-y-4" novalidate>
             <div>
               <label for="name-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Name</label>
-              <input id="name-input" type="text" placeholder="e.g. Ali Raza" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" />
+              <input id="name-input" type="text" placeholder="e.g. Ali Raza" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" required />
             </div>
 
             <div>
@@ -61,8 +61,10 @@
 
             <div>
               <label for="password-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Password</label>
-              <input id="password-input" type="password" placeholder="Enter your password" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" />
+              <input id="password-input" type="password" placeholder="Enter your password" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" required />
             </div>
+
+            <p id="login-error" class="hidden rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"></p>
 
             <button type="submit" class="w-full rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 transition shadow-lg shadow-cyan-500/20">
               Sign In
@@ -105,9 +107,9 @@
               <a href="calculator.html" class="block rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 hover:border-cyan-400 transition">
                 Open calculator
               </a>
-              <a href="index.html" class="block rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 hover:border-emerald-400 transition">
-                Back to login / access page
-              </a>
+              <button type="button" id="clear-session" class="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-left hover:border-rose-400 transition">
+                Clear session
+              </button>
             </div>
           </div>
         </section>
@@ -117,21 +119,38 @@
     <script>
       const loginForm = document.getElementById('login-form');
       const demoBtn = document.getElementById('demo-btn');
+      const loginError = document.getElementById('login-error');
+      const clearSessionBtn = document.getElementById('clear-session');
+
+      function showError(message) {
+        loginError.textContent = message;
+        loginError.classList.remove('hidden');
+      }
+
+      function hideError() {
+        loginError.textContent = '';
+        loginError.classList.add('hidden');
+      }
+
+      function setSession(user) {
+        localStorage.setItem('auhEtaUser', JSON.stringify(user));
+        localStorage.setItem('auhEtaSession', user.password);
+      }
 
       function completeLogin(name, role, password) {
         if (!name || !password) {
-          alert('Please enter your name and password.');
+          showError('Please enter your name and password.');
           return;
         }
 
-        const user = { name, role, pin: password };
-        localStorage.setItem('auhEtaUser', JSON.stringify(user));
-        localStorage.setItem('auhEtaSession', password);
+        const user = { name, role, password };
+        setSession(user);
         window.location.href = 'dashboard.html';
       }
 
       loginForm.addEventListener('submit', function (event) {
         event.preventDefault();
+        hideError();
         const name = document.getElementById('name-input').value.trim();
         const role = document.getElementById('role-input').value;
         const password = document.getElementById('password-input').value.trim();
@@ -139,11 +158,18 @@
       });
 
       demoBtn.addEventListener('click', function () {
-        document.getElementById('name-input').value = 'Demo User';
-        document.getElementById('role-input').value = 'Aircraft Dispatcher';
-        document.getElementById('password-input').value = 'demo';
         completeLogin('Demo User', 'Aircraft Dispatcher', 'demo');
       });
+
+      clearSessionBtn.addEventListener('click', function () {
+        localStorage.removeItem('auhEtaUser');
+        localStorage.removeItem('auhEtaSession');
+        window.location.reload();
+      });
+
+      if (localStorage.getItem('auhEtaSession')) {
+        window.location.href = 'dashboard.html';
+      }
     </script>
   </body>
 </html>

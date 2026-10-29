@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ETA Dashboard</title>
+    <title>ETA Calculator | AUH</title>
     <meta name="theme-color" content="#0b1120" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./icons/icon-192.png" />
@@ -11,138 +11,204 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
-        background: radial-gradient(circle at top, #111827 0%, #020817 55%, #020617 100%);
+        background: radial-gradient(circle at top, rgba(34, 211, 238, 0.12), transparent 28%),
+          linear-gradient(135deg, #020817 0%, #0f172a 42%, #020617 100%);
       }
       .glass {
         background: rgba(15, 23, 42, 0.8);
         backdrop-filter: blur(18px);
       }
+      .panel {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+      }
     </style>
   </head>
   <body class="min-h-screen text-slate-100 font-sans antialiased">
-    <div class="max-w-5xl mx-auto px-4 py-10">
-      <header class="flex items-center justify-between gap-4 mb-8">
+    <div class="max-w-6xl mx-auto px-4 py-8 md:px-8">
+      <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p class="font-mono text-xs uppercase tracking-[0.25em] text-cyan-300">AUH</p>
-          <h1 class="text-3xl font-bold">ETA Dashboard</h1>
+          <p class="font-mono text-[10px] uppercase tracking-[0.35em] text-cyan-300">AUH</p>
+          <h1 class="mt-2 text-3xl font-bold">ETA Calculator</h1>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="rounded-2xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-300">
+            <span class="text-slate-500">User:</span>
+            <span id="user-name" class="font-semibold text-white">Loading...</span>
+          </div>
+          <a href="dashboard.html" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-200 hover:border-slate-500">
+            Dashboard
+          </a>
+          <button id="signout-btn" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-200 hover:border-slate-500">
+            Sign Out
+          </button>
         </div>
       </header>
 
-      <main class="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <section class="glass border border-slate-800 rounded-3xl p-6 shadow-2xl">
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-300">Access</p>
-              <h2 class="text-2xl font-bold">Welcome back</h2>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center">
-              <span>✓</span>
-            </div>
-          </div>
-
-          <form id="login-form" class="space-y-4">
-            <div>
-              <label for="name-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Name</label>
-              <input id="name-input" type="text" placeholder="e.g. Ali Raza" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" />
-            </div>
-
-            <div>
-              <label for="role-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Role</label>
-              <select id="role-input" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none">
-                <option value="Ops Controller">Ops Controller</option>
-                <option value="Aircraft Dispatcher">Aircraft Dispatcher</option>
-                <option value="Ramp Controller">Ramp Controller</option>
-                <option value="Load Control">Load Control</option>
-                <option value="Station Coordinator">Station Coordinator</option>
-                <option value="Duty Manager">Duty Manager</option>
-                <option value="Supervisor">Supervisor</option>
-              </select>
-            </div>
-
-            <div>
-              <label for="password-input" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Password</label>
-              <input id="password-input" type="password" placeholder="Enter your password" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none" />
-            </div>
-
-            <button type="submit" class="w-full rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 transition shadow-lg shadow-cyan-500/20">
-              Sign In
-            </button>
-          </form>
-
-          <div class="mt-6 pt-4 border-t border-slate-800 text-sm text-slate-400">
-            Demo quick access:
-            <button id="demo-btn" class="text-cyan-300 hover:text-cyan-200 font-semibold">Continue as Demo User</button>
-          </div>
-        </section>
-
-        <section class="glass border border-slate-800 rounded-3xl p-6 shadow-2xl">
+      <main class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <section class="glass rounded-3xl p-6 shadow-2xl panel">
           <div class="mb-6">
-            <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-emerald-300">Overview</p>
-            <h2 class="text-2xl font-bold">Operations Dashboard</h2>
+            <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-emerald-300">Calculator</p>
+            <h2 class="text-2xl font-bold">Arrival Time Estimator</h2>
           </div>
 
-          <div class="grid gap-4 sm:grid-cols-3 mb-6">
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Flights</div>
-              <div class="mt-2 text-3xl font-extrabold font-mono text-cyan-300">12</div>
-            </div>
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Recent</div>
-              <div class="mt-2 text-3xl font-extrabold font-mono text-emerald-300">0</div>
-            </div>
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-              <div class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Favourites</div>
-              <div class="mt-2 text-3xl font-extrabold font-mono text-amber-300">0</div>
-            </div>
-          </div>
+          <form id="eta-form" class="space-y-4">
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label for="departure-time" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Departure time</label>
+                <input id="departure-time" type="time" value="09:30" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none" required />
+              </div>
 
-          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-bold text-lg">Open ETA tools</h3>
-              <span class="text-cyan-300">→</span>
+              <div>
+                <label for="flight-hours" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Flight hours</label>
+                <input id="flight-hours" type="number" min="0" step="1" value="3" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none" required />
+              </div>
             </div>
-            <div class="space-y-2">
-              <a href="calculator.html" class="block rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 hover:border-cyan-400 transition">
-                Open calculator
-              </a>
-              <a href="index.html" class="block rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 hover:border-emerald-400 transition">
-                Back to login / access page
-              </a>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label for="flight-minutes" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Flight minutes</label>
+                <input id="flight-minutes" type="number" min="0" max="59" step="1" value="25" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none" required />
+              </div>
+
+              <div>
+                <label for="delay-minutes" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Delay (min)</label>
+                <input id="delay-minutes" type="number" min="0" step="1" value="0" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none" />
+              </div>
             </div>
-          </div>
+
+            <div>
+              <label for="taxi-minutes" class="block text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Taxi / turnaround (min)</label>
+              <input id="taxi-minutes" type="number" min="0" step="1" value="15" class="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-base text-white focus:border-cyan-400 focus:outline-none" />
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button type="submit" class="flex-1 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 transition shadow-lg shadow-cyan-500/20">
+                Calculate ETA
+              </button>
+              <button type="button" id="reset-btn" class="rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 hover:border-slate-500">
+                Reset
+              </button>
+            </div>
+          </form>
         </section>
+
+        <aside class="glass rounded-3xl p-6 shadow-2xl panel">
+          <div class="mb-5">
+            <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-300">Result</p>
+            <h3 class="mt-2 text-2xl font-bold">Estimated Arrival</h3>
+          </div>
+
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 space-y-4">
+            <div>
+              <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Departure</div>
+              <div id="result-departure" class="mt-2 text-2xl font-black text-white">--:--</div>
+            </div>
+
+            <div>
+              <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Flight time</div>
+              <div id="result-duration" class="mt-2 text-2xl font-black text-cyan-300">--h --m</div>
+            </div>
+
+            <div>
+              <div class="text-xs uppercase tracking-[0.2em] text-slate-400">ETA</div>
+              <div id="result-eta" class="mt-2 text-3xl font-black text-emerald-300">--:--</div>
+            </div>
+
+            <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+              <div class="text-xs uppercase tracking-[0.2em] text-amber-200">Status</div>
+              <div id="result-status" class="mt-2 font-medium">Waiting for input</div>
+            </div>
+          </div>
+        </aside>
       </main>
     </div>
 
     <script>
-      const loginForm = document.getElementById('login-form');
-      const demoBtn = document.getElementById('demo-btn');
+      function readJson(key, fallback) {
+        try {
+          const stored = localStorage.getItem(key);
+          return stored ? JSON.parse(stored) : fallback;
+        } catch (error) {
+          return fallback;
+        }
+      }
 
-      function completeLogin(name, role, password) {
-        if (!name || !password) {
-          alert('Please enter your name and password.');
+      function ensureSession() {
+        const user = readJson('auhEtaUser', null);
+        const session = localStorage.getItem('auhEtaSession');
+
+        if (!user || !user.password || session !== user.password) {
+          window.location.href = 'index.html';
+          return null;
+        }
+
+        return user;
+      }
+
+      const user = ensureSession();
+      if (user) {
+        document.getElementById('user-name').textContent = user.name;
+      }
+
+      function toMinutes(hhmm) {
+        const [hours, minutes] = hhmm.split(':').map(Number);
+        return hours * 60 + minutes;
+      }
+
+      function formatClock(totalMinutes) {
+        const safeMinutes = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+        const hours = Math.floor(safeMinutes / 60);
+        const minutes = safeMinutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      }
+
+      function calculateEta(event) {
+        event.preventDefault();
+
+        const departure = document.getElementById('departure-time').value;
+        const flightHours = Number(document.getElementById('flight-hours').value || 0);
+        const flightMinutes = Number(document.getElementById('flight-minutes').value || 0);
+        const delayMinutes = Number(document.getElementById('delay-minutes').value || 0);
+        const taxiMinutes = Number(document.getElementById('taxi-minutes').value || 0);
+
+        if (!departure) {
           return;
         }
 
-        const user = { name, role, pin: password, hash: password };
-        localStorage.setItem('auhEtaUser', JSON.stringify(user));
-        localStorage.setItem('auhEtaSession', password);
-        window.location.href = 'dashboard.html';
+        const travelMinutes = flightHours * 60 + flightMinutes + delayMinutes + taxiMinutes;
+        const departureMinutes = toMinutes(departure);
+        const etaMinutes = departureMinutes + travelMinutes;
+
+        document.getElementById('result-departure').textContent = departure;
+        document.getElementById('result-duration').textContent = `${flightHours}h ${flightMinutes}m`;
+        document.getElementById('result-eta').textContent = formatClock(etaMinutes);
+
+        const statusText = delayMinutes > 0
+          ? `ETA adjusted by ${delayMinutes} minutes due to delay.`
+          : 'On schedule';
+        document.getElementById('result-status').textContent = statusText;
       }
 
-      loginForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        const name = document.getElementById('name-input').value.trim();
-        const role = document.getElementById('role-input').value;
-        const password = document.getElementById('password-input').value.trim();
-        completeLogin(name, role, password);
+      document.getElementById('eta-form').addEventListener('submit', calculateEta);
+
+      document.getElementById('reset-btn').addEventListener('click', function () {
+        document.getElementById('eta-form').reset();
+        document.getElementById('departure-time').value = '09:30';
+        document.getElementById('flight-hours').value = 3;
+        document.getElementById('flight-minutes').value = 25;
+        document.getElementById('delay-minutes').value = 0;
+        document.getElementById('taxi-minutes').value = 15;
+        document.getElementById('result-departure').textContent = '--:--';
+        document.getElementById('result-duration').textContent = '--h --m';
+        document.getElementById('result-eta').textContent = '--:--';
+        document.getElementById('result-status').textContent = 'Waiting for input';
       });
 
-      demoBtn.addEventListener('click', function () {
-        document.getElementById('name-input').value = 'Demo User';
-        document.getElementById('role-input').value = 'Aircraft Dispatcher';
-        document.getElementById('password-input').value = 'demo';
-        completeLogin('Demo User', 'Aircraft Dispatcher', 'demo');
+      document.getElementById('signout-btn').addEventListener('click', function () {
+        localStorage.removeItem('auhEtaUser');
+        localStorage.removeItem('auhEtaSession');
+        window.location.href = 'index.html';
       });
     </script>
   </body>
