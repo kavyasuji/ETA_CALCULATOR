@@ -124,9 +124,18 @@
       const loginError = document.getElementById('login-error');
       const clearSessionBtn = document.getElementById('clear-session');
 
+      function clearSession() {
+        localStorage.removeItem(userKey);
+        localStorage.removeItem(sessionKey);
+      }
+
       function readUser() {
         try {
-          return JSON.parse(localStorage.getItem(userKey) || 'null');
+          const raw = localStorage.getItem(userKey);
+          if (!raw) return null;
+          const user = JSON.parse(raw);
+          if (!user || !user.name || !user.password) return null;
+          return user;
         } catch (error) {
           return null;
         }
@@ -142,10 +151,24 @@
         loginError.classList.add('hidden');
       }
 
-      function setSession(user) {
-        const normalizedUser = { name: user.name, role: user.role, password: user.password };
-        localStorage.setItem(userKey, JSON.stringify(normalizedUser));
-        localStorage.setItem(sessionKey, user.password);
+      function saveSession(user) {
+        const normalized = {
+          name: String(user.name || '').trim(),
+          role: String(user.role || '').trim(),
+          password: String(user.password || '').trim()
+        };
+
+        if (!normalized.name || !normalized.password) {
+          return false;
+        }
+
+        localStorage.setItem(userKey, JSON.stringify(normalized));
+        localStorage.setItem(sessionKey, normalized.password);
+        return true;
+      }
+
+      function redirectToDashboard() {
+        window.location.replace('dashboard.html');
       }
 
       function completeLogin(name, role, password) {
@@ -154,16 +177,39 @@
           return;
         }
 
-        setSession({ name, role, password });
-        window.location.href = 'dashboard.html';
+        const saved = saveSession({ name, role, password });
+        if (!saved) {
+          showError('Login failed. Please try again.');
+          return;
+        }
+
+        redirectToDashboard();
+      }
+
+      function validateExistingSession() {
+        const user = readUser();
+        const session = localStorage.getItem(sessionKey);
+
+        if (user && user.password && session === user.password) {
+          redirectToDashboard();
+          return true;
+        }
+
+        if (user || session) {
+          clearSession();
+        }
+
+        return false;
       }
 
       loginForm.addEventListener('submit', function (event) {
         event.preventDefault();
         hideError();
+
         const name = document.getElementById('name-input').value.trim();
         const role = document.getElementById('role-input').value;
         const password = document.getElementById('password-input').value.trim();
+
         completeLogin(name, role, password);
       });
 
@@ -172,16 +218,11 @@
       });
 
       clearSessionBtn.addEventListener('click', function () {
-        localStorage.removeItem(userKey);
-        localStorage.removeItem(sessionKey);
+        clearSession();
         window.location.reload();
       });
 
-      const user = readUser();
-      const session = localStorage.getItem(sessionKey);
-      if (user && user.password && session === user.password) {
-        window.location.href = 'dashboard.html';
-      }
+      validateExistingSession();
     </script>
   </body>
 </html>
