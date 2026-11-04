@@ -124,6 +124,11 @@
       const loginError = document.getElementById('login-error');
       const clearSessionBtn = document.getElementById('clear-session');
 
+      function getUserPassword(user) {
+        if (!user) return '';
+        return String(user.password ?? user.pin ?? '').trim();
+      }
+
       function clearSession() {
         localStorage.removeItem(userKey);
         localStorage.removeItem(sessionKey);
@@ -134,8 +139,8 @@
           const raw = localStorage.getItem(userKey);
           if (!raw) return null;
           const user = JSON.parse(raw);
-          if (!user || !user.name || !user.password) return null;
-          return user;
+          if (!user || !user.name || !getUserPassword(user)) return null;
+          return { ...user, password: getUserPassword(user) };
         } catch (error) {
           return null;
         }
@@ -155,7 +160,7 @@
         const normalized = {
           name: String(user.name || '').trim(),
           role: String(user.role || '').trim(),
-          password: String(user.password || '').trim()
+          password: String(getUserPassword(user) || user.password || '').trim()
         };
 
         if (!normalized.name || !normalized.password) {
@@ -168,6 +173,10 @@
       }
 
       function redirectToDashboard() {
+        const currentPath = window.location.pathname;
+        if (currentPath.endsWith('/dashboard.html') || currentPath.endsWith('/dashboard')) {
+          return;
+        }
         window.location.replace('dashboard.html');
       }
 
@@ -189,9 +198,9 @@
       function validateExistingSession() {
         const user = readUser();
         const session = localStorage.getItem(sessionKey);
+        const password = getUserPassword(user);
 
-        if (user && user.password && session === user.password) {
-          redirectToDashboard();
+        if (user && password && session === password) {
           return true;
         }
 
@@ -222,7 +231,11 @@
         window.location.reload();
       });
 
-      validateExistingSession();
+      if (window.location.pathname.endsWith('/index.html') || window.location.pathname === '/' || window.location.pathname.endsWith('/')) {
+        if (validateExistingSession()) {
+          redirectToDashboard();
+        }
+      }
     </script>
   </body>
 </html>
