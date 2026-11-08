@@ -4,6 +4,7 @@ const APP_SHELL = [
   './index.html',
   './dashboard.html',
   './calculator.html',
+  './flight-status.html',
   './manifest.json'
 ];
 
@@ -55,3 +56,4 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#020817" />
+  <meta name="description" content="Manual flight status tracker with live countdown." />
+  <title>Flight Status | AUH ETA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #111827 0%, #020817 55%, #020617 100%);
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(18px);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 font-sans antialiased">
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+    <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-[.30em] text-cyan-300">Operations</p>
+        <h1 class="text-3xl font-bold sm:text-4xl">Flight Status</h1>
+      </div>
+      <a href="index.html" class="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-white">
+        ← Dashboard
+      </a>
+    </header>
+
+    <main class="grid gap-6 lg:grid-cols-[1fr_.9fr]">
+      <section class="glass rounded-3xl border border-slate-800 p-5 shadow-2xl sm:p-6">
+        <h2 class="mb-4 text-xl font-bold">Add / Update Flight</h2>
+
+        <form id="flight-form" class="space-y-4">
+          <div>
+            <label class="mb-1 block text-[10px] font-mono uppercase tracking-[.22em] text-slate-400">Flight Number</label>
+            <input id="flightNo" required placeholder="EY 230" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-cyan-400" />
+          </div>
+
+          <div>
+            <label class="mb-1 block text-[10px] font-mono uppercase tracking-[.22em] text-slate-400">Airline</label>
+            <input id="airline" required placeholder="Etihad Airways" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-cyan-400" />
+          </div>
+
+          <div>
+            <label class="mb-1 block text-[10px] font-mono uppercase tracking-[.22em] text-slate-400">Route</label>
+            <input id="route" required placeholder="AUH → DXB" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-cyan-400" />
+          </div>
+
+          <div>
+            <label class="mb-1 block text-[10px] font-mono uppercase tracking-[.22em] text-slate-400">Scheduled Arrival</label>
+            <input id="scheduledArrival" type="datetime-local" required class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-cyan-400" />
+          </div>
+
+          <div>
+            <label class="mb-1 block text-[10px] font-mono uppercase tracking-[.22em] text-slate-400">Actual Status</label>
+            <select id="status" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-cyan-400">
+              <option value="On Time">On Time</option>
+              <option value="Delayed">Delayed</option>
+              <option value="Boarding">Boarding</option>
+              <option value="Landed">Landed</option>
+              <option value="Departed">Departed</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-1 block text-[10px] font-mono uppercase tracking-[.22em] text-slate-400">Gate / Terminal</label>
+            <input id="gate" placeholder="A12 / Terminal 2" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-cyan-400" />
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="flex-1 rounded-xl bg-cyan-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-cyan-300">
+              Save Status
+            </button>
+            <button type="button" id="clearBtn" class="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-200 transition hover:border-red-400 hover:text-red-300">
+              Clear
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="glass rounded-3xl border border-slate-800 p-5 shadow-2xl sm:p-6">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p class="font-mono text-[10px] uppercase tracking-[.28em] text-emerald-300">Live status</p>
+            <h2 class="text-2xl font-bold">Current flight</h2>
+          </div>
+          <span id="statusBadge" class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300">
+            On Time
+          </span>
+        </div>
+
+        <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div id="flightLabel" class="font-mono text-3xl font-extrabold text-white">—</div>
+              <div id="airlineLabel" class="mt-1 text-sm text-slate-400">—</div>
+            </div>
+            <div class="text-right">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400">Route</div>
+              <div id="routeLabel" class="font-mono text-lg font-bold text-cyan-300">—</div>
+            </div>
+          </div>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-3">
+            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400">Scheduled</div>
+              <div id="scheduledLabel" class="mt-2 font-mono text-lg font-bold">—</div>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400">Gate</div>
+              <div id="gateLabel" class="mt-2 font-mono text-lg font-bold">—</div>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400">Arrival in</div>
+              <div id="countdownLabel" class="mt-2 font-mono text-lg font-bold text-amber-300">—</div>
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+            <div class="text-[10px] uppercase tracking-wider text-slate-400">Status update</div>
+            <div id="summaryText" class="mt-2 text-base text-slate-200">No flight selected.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'flightStatusRecord';
+
+    function getValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function setStatusBadge(status) {
+      const badge = document.getElementById('statusBadge');
+      badge.textContent = status;
+      badge.className = 'rounded-full border px-3 py-1 text-xs font-bold';
+
+      if (status === 'Delayed') {
+        badge.classList.add('border-amber-500/30', 'bg-amber-500/10', 'text-amber-300');
+      } else if (status === 'Landed') {
+        badge.classList.add('border-emerald-500/30', 'bg-emerald-500/10', 'text-emerald-300');
+      } else if (status === 'Boarding') {
+        badge.classList.add('border-cyan-500/30', 'bg-cyan-500/10', 'text-cyan-300');
+      } else if (status === 'Departed') {
+        badge.classList.add('border-violet-500/30', 'bg-violet-500/10', 'text-violet-300');
+      } else {
+        badge.classList.add('border-emerald-500/30', 'bg-emerald-500/10', 'text-emerald-300');
+      }
+    }
+
+    function formatDateTime(value) {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return '—';
+      return d.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function formatCountdown(ms) {
+      if (ms <= 0) return 'Arrived';
+      const totalSeconds = Math.floor(ms / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = Math.floor(totalSeconds % 60);
+
+      if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+      if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+      if (minutes > 0) return `${minutes}m ${seconds}s`;
+      return `${seconds}s`;
+    }
+
+    function renderFlight(data) {
+      const flightLabel = document.getElementById('flightLabel');
+      const airlineLabel = document.getElementById('airlineLabel');
+      const routeLabel = document.getElementById('routeLabel');
+      const scheduledLabel = document.getElementById('scheduledLabel');
+      const gateLabel = document.getElementById('gateLabel');
+      const countdownLabel = document.getElementById('countdownLabel');
+      const summaryText = document.getElementById('summaryText');
+
+      flightLabel.textContent = data.flightNo || '—';
+      airlineLabel.textContent = data.airline || '—';
+      routeLabel.textContent = data.route || '—';
+      scheduledLabel.textContent = formatDateTime(data.scheduledArrival);
+      gateLabel.textContent = data.gate || '—';
+      setStatusBadge(data.status || 'On Time');
+
+      const arrivalTime = new Date(data.scheduledArrival).getTime();
+      const diff = arrivalTime - Date.now();
+      countdownLabel.textContent = formatCountdown(diff);
+
+      summaryText.textContent =
+        `${data.airline || 'Flight'} ${data.flightNo || ''} is ${data.status || 'On Time'}.` +
+        (data.gate ? ` Gate ${data.gate}.` : '') +
+        (data.scheduledArrival ? ` Scheduled arrival: ${formatDateTime(data.scheduledArrival)}.` : '');
+    }
+
+    function saveFlight(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadFlight() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function startCountdown() {
+      const data = loadFlight();
+      if (!data) return;
+
+      renderFlight(data);
+
+      setInterval(() => {
+        const currentData = loadFlight();
+        if (currentData) renderFlight(currentData);
+      }, 1000);
+    }
+
+    document.getElementById('flight-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const data = {
+        flightNo: getValue('flightNo'),
+        airline: getValue('airline'),
+        route: getValue('route'),
+        scheduledArrival: getValue('scheduledArrival'),
+        status: getValue('status'),
+        gate: getValue('gate')
+      };
+
+      saveFlight(data);
+      renderFlight(data);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function () {
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById('flight-form').reset();
+      document.getElementById('flightLabel').textContent = '—';
+      document.getElementById('airlineLabel').textContent = '—';
+      document.getElementById('routeLabel').textContent = '—';
+      document.getElementById('scheduledLabel').textContent = '—';
+      document.getElementById('gateLabel').textContent = '—';
+      document.getElementById('countdownLabel').textContent = '—';
+      document.getElementById('summaryText').textContent = 'No flight selected.';
+      document.getElementById('statusBadge').textContent = 'On Time';
+      document.getElementById('statusBadge').className = 'rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300';
+    });
+
+    startCountdown();
+  </script>
+</body>
+</html>
+

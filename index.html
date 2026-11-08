@@ -66,14 +66,18 @@
       <section class="glass rounded-3xl border border-slate-800 p-5 shadow-2xl sm:p-6">
         <p class="font-mono text-[10px] uppercase tracking-[.28em] text-cyan-300">Quick access</p>
         <h2 class="mb-5 text-2xl font-bold">Flight tools</h2>
-        <a href="calculator.html" data-calculator-link class="mb-5 flex items-center justify-between rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4 transition hover:border-cyan-400">
+        <a href="calculator.html" data-calculator-link class="mb-3 flex items-center justify-between rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4 transition hover:border-cyan-400">
           <span><span class="block font-bold">Flight ETA calculator</span><span class="mt-1 block text-sm text-slate-400">Calculate local and Zulu arrival times</span></span>
           <span class="text-xl text-cyan-300" aria-hidden="true">→</span>
         </a>
+        <a href="flight-status.html" data-calculator-link class="mb-5 flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 transition hover:border-emerald-400">
+          <span><span class="block font-bold">Flight Status</span><span class="mt-1 block text-sm text-slate-400">Track scheduled arrival and live countdown</span></span>
+          <span class="text-xl text-emerald-300" aria-hidden="true">→</span>
+        </a>
         <div class="grid grid-cols-3 gap-3">
-          <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-3"><div class="text-[10px] uppercase tracking-wider text-slate-400">Recent</div><div id="recent-count" class="mt-2 font-mono text-2xl font-bold text-emerald-300">0</div></div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-3"><div class="text-[10px] uppercase tracking-wider text-slate-400">Recent</div><div id="recent-count" class="mt-2 font-mono text-2xl font-bold text-cyan-300">0</div></div>
           <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-3"><div class="text-[10px] uppercase tracking-wider text-slate-400">Favourites</div><div id="favourite-count" class="mt-2 font-mono text-2xl font-bold text-amber-300">0</div></div>
-          <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-3"><div class="text-[10px] uppercase tracking-wider text-slate-400">Origin</div><div class="mt-2 font-mono text-2xl font-bold text-cyan-300">AUH</div></div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-3"><div class="text-[10px] uppercase tracking-wider text-slate-400">Origin</div><div class="mt-2 font-mono text-2xl font-bold text-emerald-300">AUH</div></div>
         </div>
         <div class="mt-5 border-t border-slate-800 pt-4">
           <div class="mb-2 flex items-center justify-between"><h3 class="font-semibold">Recent calculations</h3><span class="text-xs text-slate-500">Saved on this device</span></div>
@@ -89,18 +93,17 @@
   </div>
 
   <script>
-    // The calculator currently retains a legacy local access check. This local-only
-    // marker keeps the no-login dashboard flow working without asking for credentials.
     try {
       const access = { name: 'Dashboard User', role: 'Aircraft Dispatcher', password: 'dashboard-access' };
       localStorage.setItem('auhEtaUser', JSON.stringify(access));
       localStorage.setItem('auhEtaSession', access.password);
-    } catch (error) { /* Storage can be unavailable in private browsing. */ }
+    } catch (error) { }
 
     const readList = key => {
       try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; }
       catch (error) { return []; }
     };
+
     function renderTools() {
       const recent = readList('auhEtaRecent');
       const favourites = readList('auhEtaFav');
@@ -116,9 +119,13 @@
         link.className = 'flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 hover:border-cyan-400';
         const label = document.createElement('span');
         label.textContent = `${item.dest || 'Flight'} · ${item.ab || '--:--'} · EET ${item.eet || '--:--'}`;
-        const arrow = document.createElement('span'); arrow.textContent = '→'; arrow.className = 'text-cyan-300';
-        link.append(label, arrow); recentList.appendChild(link);
+        const arrow = document.createElement('span');
+        arrow.textContent = '→';
+        arrow.className = 'text-cyan-300';
+        link.append(label, arrow);
+        recentList.appendChild(link);
       });
+
       const favouriteList = document.getElementById('favourite-list');
       favouriteList.replaceChildren();
       if (!favourites.length) favouriteList.innerHTML = '<span>No favourites yet. Star a destination in the calculator.</span>';
@@ -127,7 +134,8 @@
         link.href = `calculator.html?dest=${encodeURIComponent(code)}`;
         link.dataset.calculatorLink = '';
         link.className = 'rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-amber-200 hover:border-amber-400';
-        link.textContent = code; favouriteList.appendChild(link);
+        link.textContent = code;
+        favouriteList.appendChild(link);
       });
     }
 
@@ -139,13 +147,21 @@
       77: ['Snow grains', '🌨️'], 80: ['Rain showers', '🌦️'], 81: ['Rain showers', '🌧️'], 82: ['Heavy showers', '⛈️'],
       85: ['Snow showers', '🌨️'], 86: ['Heavy snow showers', '❄️'], 95: ['Thunderstorm', '⛈️'], 96: ['Thunderstorm with hail', '⛈️'], 99: ['Severe thunderstorm', '⛈️']
     };
+
     async function loadWeather() {
       const status = document.getElementById('weather-status');
       const button = document.getElementById('weather-refresh');
-      button.disabled = true; button.classList.add('opacity-50');
+      button.disabled = true;
+      button.classList.add('opacity-50');
       status.textContent = 'Loading latest weather…';
       try {
-        const params = new URLSearchParams({ latitude: '24.4539', longitude: '54.3773', current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m', daily: 'weather_code,temperature_2m_max,temperature_2m_min', timezone: 'Asia/Dubai', forecast_days: '3' });
+        const params = new URLSearchParams({
+          latitude: '24.4539',
+          longitude: '54.3773',
+          current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+          daily: 'weather_code,temperature_2m_max,temperature_2m_min',
+          timezone: 'auto'
+        });
         const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
         if (!response.ok) throw new Error('Weather service unavailable');
         const data = await response.json();
@@ -157,13 +173,15 @@
         document.getElementById('weather-feels').textContent = `Feels like ${Math.round(current.apparent_temperature)}°C`;
         document.getElementById('weather-wind').textContent = Math.round(current.wind_speed_10m);
         document.getElementById('weather-humidity').textContent = `${current.relative_humidity_2m}%`;
-        const forecast = document.getElementById('forecast'); forecast.replaceChildren();
+        const forecast = document.getElementById('forecast');
+        forecast.replaceChildren();
         data.daily.time.forEach((day, index) => {
           const [label, dayIcon] = weatherCodes[data.daily.weather_code[index]] || ['Conditions', '🌡️'];
-          const card = document.createElement('div'); card.className = 'rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-center';
+          const card = document.createElement('div');
+          card.className = 'rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-center';
           const date = new Date(`${day}T12:00:00`);
           const weekday = index === 0 ? 'Today' : date.toLocaleDateString('en', { weekday: 'short', timeZone: 'Asia/Dubai' });
-          card.innerHTML = `<div class="text-xs text-slate-400">${weekday}</div><div class="my-2 text-xl" aria-label="${label}">${dayIcon}</div><div class="font-mono text-sm font-bold">${Math.round(data.daily.temperature_2m_max[index])}° <span class="text-slate-500">${Math.round(data.daily.temperature_2m_min[index])}°</span></div>`;
+          card.innerHTML = `<div class="text-xs text-slate-400">${weekday}</div><div class="my-2 text-xl" aria-label="${label}">${dayIcon}</div><div class="font-mono text-sm font-bold">${Math.round(data.daily.temperature_2m_max[index])}° / ${Math.round(data.daily.temperature_2m_min[index])}°</div>`;
           forecast.appendChild(card);
         });
         document.getElementById('weather-updated').textContent = `Updated ${new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dubai' })} Abu Dhabi time`;
@@ -171,10 +189,16 @@
         status.textContent = 'Current conditions in Abu Dhabi';
       } catch (error) {
         status.textContent = 'Weather is temporarily unavailable. Check your connection and try again.';
-      } finally { button.disabled = false; button.classList.remove('opacity-50'); }
+      } finally {
+        button.disabled = false;
+        button.classList.remove('opacity-50');
+      }
     }
+
     document.getElementById('weather-refresh').addEventListener('click', loadWeather);
-    renderTools(); loadWeather();
+    renderTools();
+    loadWeather();
   </script>
 </body>
 </html>
+
